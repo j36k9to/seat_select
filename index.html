@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - 視認性最大化版</title>
+    <title>座席抽選システム - 高視認性Webフォント版</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --color-blue-600: #0062cc;
@@ -13,7 +18,8 @@
             --color-gray-50: #f2f2f2;
             --color-white: #ffffff;
             --color-error: #d43d35;
-            --font-main: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Yu Gothic", sans-serif;
+            /* Webフォントを最優先に指定 */
+            --font-main: 'BIZ UDPGothic', "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", "Yu Gothic", sans-serif;
         }
 
         body {
@@ -43,7 +49,7 @@
             padding-bottom: 12px;
         }
 
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.05em; }
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.05em; }
 
         button {
             font-family: var(--font-main);
@@ -131,8 +137,8 @@
 
         .seat {
             position: absolute;
-            width: 140px; /* 文字サイズに合わせて少し横幅を拡大 */
-            height: 80px; /* 文字サイズに合わせて少し高さを拡大 */
+            width: 140px;
+            height: 80px;
             border: 2.5px solid var(--color-gray-900);
             background: var(--color-white);
             display: flex;
@@ -146,11 +152,10 @@
             border-radius: 4px;
         }
 
-        /* 職員名のサイズを最大化 */
         .seat-name { 
             font-size: 1.5rem; 
-            font-weight: 800; 
-            letter-spacing: -0.02em; /* 文字が大きくても収まりやすく */
+            font-weight: 700; 
+            letter-spacing: -0.02em;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -160,7 +165,7 @@
         .free-text { 
             position: absolute; 
             cursor: move; 
-            font-weight: 800; 
+            font-weight: 700; 
             display: flex; 
             align-items: center; 
             white-space: nowrap; 
@@ -257,10 +262,13 @@
 
 <script>
     const SNAP = 12;
-    let counts = JSON.parse(localStorage.getItem('staffCounts_v7')) || { kanri: 2, shomu: 2, general: 14 };
-    let names = JSON.parse(localStorage.getItem('staffNames_v7')) || {};
-    let pos = JSON.parse(localStorage.getItem('seatPos_v7')) || {};
-    let texts = JSON.parse(localStorage.getItem('freeTexts_v7')) || [];
+    // ローカルストレージのキーをv8に更新して整合性を確保
+    const STORAGE_KEY_PREFIX = 'seat_system_v8_';
+    
+    let counts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'counts')) || { kanri: 2, shomu: 2, general: 14 };
+    let names = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'names')) || {};
+    let pos = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'pos')) || {};
+    let texts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'texts')) || [];
     let history = null;
 
     function init() { renderMaint(); syncSeats(); renderTexts(); }
@@ -399,11 +407,35 @@
     }
 
     function deleteText(id) { texts = texts.filter(x => x.id !== id); renderTexts(); }
-    function saveAll() { localStorage.setItem('staffCounts_v7', JSON.stringify(counts)); localStorage.setItem('staffNames_v7', JSON.stringify(names)); localStorage.setItem('seatPos_v7', JSON.stringify(pos)); localStorage.setItem('freeTexts_v7', JSON.stringify(texts)); alert('設定を保存しました。'); }
-    function exportConfig() { const blob = new Blob([JSON.stringify({counts,names,pos,texts})],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `座席設定.json`; a.click(); }
-    function importConfig(input) { const reader = new FileReader(); reader.onload = (e) => { try { const d = JSON.parse(e.target.result); counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; saveAll(); location.reload(); } catch(err) { alert('読み込みに失敗しました。'); } }; reader.readAsText(input.files[0]); }
-    function resetNames() { if(confirm('職員名を消去しますか？')){ names={}; renderMaint(); syncSeats(); } }
-    function fullReset() { if(confirm('全てを初期化しますか？')){ localStorage.clear(); location.reload(); } }
+
+    function saveAll() { 
+        localStorage.setItem(STORAGE_KEY_PREFIX + 'counts', JSON.stringify(counts)); 
+        localStorage.setItem(STORAGE_KEY_PREFIX + 'names', JSON.stringify(names)); 
+        localStorage.setItem(STORAGE_KEY_PREFIX + 'pos', JSON.stringify(pos)); 
+        localStorage.setItem(STORAGE_KEY_PREFIX + 'texts', JSON.stringify(texts)); 
+        alert('現在の設定と職員名を保存しました。'); 
+    }
+
+    function exportConfig() { 
+        const blob = new Blob([JSON.stringify({counts,names,pos,texts})],{type:'application/json'}); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
+        a.download = `座席設定.json`; a.click(); 
+    }
+
+    function importConfig(input) { 
+        const reader = new FileReader(); 
+        reader.onload = (e) => { 
+            try { 
+                const d = JSON.parse(e.target.result); 
+                counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; 
+                saveAll(); location.reload(); 
+            } catch(err) { alert('読み込みに失敗しました。'); } 
+        }; 
+        reader.readAsText(input.files[0]); 
+    }
+
+    function resetNames() { if(confirm('登録された職員名をすべて消去しますか？')){ names={}; renderMaint(); syncSeats(); saveAll(); } }
+    function fullReset() { if(confirm('すべての設定、配置、職員名を初期化しますか？')){ localStorage.clear(); location.reload(); } }
 
     init();
 </script>
