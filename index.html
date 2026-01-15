@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - UI最適化版</title>
+    <title>座席抽選システム - 視認性最大化版</title>
     <style>
         :root {
             --color-blue-600: #0062cc;
@@ -13,8 +13,7 @@
             --color-gray-50: #f2f2f2;
             --color-white: #ffffff;
             --color-error: #d43d35;
-            --color-focus: #ffdd00;
-            --font-main: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+            --font-main: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Yu Gothic", sans-serif;
         }
 
         body {
@@ -23,7 +22,8 @@
             color: var(--color-gray-900);
             margin: 0;
             padding: 16px;
-            line-height: 1.5;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
@@ -43,14 +43,14 @@
             padding-bottom: 12px;
         }
 
-        h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.05em; }
 
         button {
             font-family: var(--font-main);
             font-size: 1rem;
             font-weight: 700;
             padding: 10px 20px;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 2px solid transparent;
             cursor: pointer;
             min-height: 48px;
@@ -77,6 +77,7 @@
             padding: 16px;
             border: 1px solid var(--color-gray-200);
             margin-bottom: 16px;
+            border-radius: 8px;
         }
 
         .input-grid {
@@ -86,20 +87,20 @@
         }
 
         input[type="text"], select {
+            font-family: var(--font-main);
             font-size: 1rem;
             height: 48px;
-            border: 1px solid var(--color-gray-700);
-            border-radius: 4px;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 6px;
             width: 100%;
             box-sizing: border-box;
             padding: 0 12px;
         }
 
-        /* 修正点：カラーピッカーのスタイル調整 */
         input[type="color"] {
             -webkit-appearance: none;
-            border: 1px solid var(--color-gray-700);
-            border-radius: 4px;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 6px;
             height: 48px;
             width: 60px;
             padding: 4px;
@@ -107,8 +108,6 @@
             cursor: pointer;
             box-sizing: border-box;
         }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 2px; }
 
         .controls-main {
             display: flex;
@@ -123,7 +122,7 @@
             width: 100%;
             height: 65vh;
             background: var(--color-white);
-            border: 1px solid var(--color-gray-900);
+            border: 2.5px solid var(--color-gray-900);
             overflow: hidden;
             background-image: radial-gradient(var(--color-gray-200) 1px, transparent 1px);
             background-size: 24px 24px;
@@ -132,9 +131,9 @@
 
         .seat {
             position: absolute;
-            width: 135px;
-            height: 75px;
-            border: 2px solid var(--color-gray-900);
+            width: 140px; /* 文字サイズに合わせて少し横幅を拡大 */
+            height: 80px; /* 文字サイズに合わせて少し高さを拡大 */
+            border: 2.5px solid var(--color-gray-900);
             background: var(--color-white);
             display: flex;
             align-items: center;
@@ -144,23 +143,30 @@
             box-sizing: border-box;
             z-index: 10;
             text-align: center;
+            border-radius: 4px;
         }
 
-        .seat-name { font-size: 1.2rem; font-weight: 700; }
+        /* 職員名のサイズを最大化 */
+        .seat-name { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            letter-spacing: -0.02em; /* 文字が大きくても収まりやすく */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 4px;
+        }
 
         .free-text { 
             position: absolute; 
             cursor: move; 
-            font-weight: 700; 
+            font-weight: 800; 
             display: flex; 
             align-items: center; 
             white-space: nowrap; 
             z-index: 5;
             padding: 4px;
-            border: 1px solid transparent;
         }
-        
-        .free-text:hover { border: 1px dashed var(--color-gray-200); }
 
         .delete-text { 
             color: var(--color-error); 
@@ -169,13 +175,12 @@
             cursor: pointer; 
             background: white; 
             border-radius: 50%; 
-            width: 20px; 
-            height: 20px; 
+            width: 22px; 
+            height: 22px; 
             display: none;
             align-items: center; 
             justify-content: center; 
-            border: 1px solid var(--color-error);
-            font-weight: normal;
+            border: 2px solid var(--color-error);
         }
 
         .free-text:hover .delete-text { display: flex; }
@@ -193,6 +198,7 @@
         @media print {
             .header-bar, #maintenanceArea, .controls-main, .delete-text { display: none !important; }
             .seat-area { border: none !important; height: auto !important; overflow: visible !important; }
+            .seat { border: 2.5px solid #000 !important; }
         }
     </style>
 </head>
@@ -206,7 +212,7 @@
 
     <div id="maintenanceArea">
         <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">設定データの書き出し・読み込み</p>
+            <p style="margin-top:0; font-weight:700;">データの入出力</p>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                 <button class="btn-outline" onclick="exportConfig()">PCに保存（配布用）</button>
                 <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
@@ -239,10 +245,10 @@
     </div>
 
     <div class="controls-main">
-        <div style="width: 120px; visibility: hidden;" id="undoSpacer"></div>
-        <button class="btn-primary" style="flex-grow: 1; max-width: 400px; font-size: 1.5rem; padding: 20px;" onclick="confirmAndDraw()">座席を抽選する</button>
-        <div style="width: 120px; text-align: left;">
-            <button id="undoBtn" class="btn-outline" style="display:none; font-size: 0.9rem;" onclick="undoResult()">⤶ 戻す</button>
+        <div style="width: 100px; visibility: hidden;"></div>
+        <button class="btn-primary" style="flex-grow: 1; max-width: 400px; font-size: 1.5rem; padding: 20px; border-radius: 12px;" onclick="confirmAndDraw()">座席を抽選する</button>
+        <div style="width: 100px; text-align: left;">
+            <button id="undoBtn" class="btn-outline" style="display:none; font-size: 0.9rem; min-height: 40px;" onclick="undoResult()">⤶ 戻す</button>
         </div>
     </div>
 
@@ -251,10 +257,10 @@
 
 <script>
     const SNAP = 12;
-    let counts = JSON.parse(localStorage.getItem('staffCounts_v5')) || { kanri: 2, shomu: 2, general: 14 };
-    let names = JSON.parse(localStorage.getItem('staffNames_v5')) || {};
-    let pos = JSON.parse(localStorage.getItem('seatPos_v5')) || {};
-    let texts = JSON.parse(localStorage.getItem('freeTexts_v5')) || [];
+    let counts = JSON.parse(localStorage.getItem('staffCounts_v7')) || { kanri: 2, shomu: 2, general: 14 };
+    let names = JSON.parse(localStorage.getItem('staffNames_v7')) || {};
+    let pos = JSON.parse(localStorage.getItem('seatPos_v7')) || {};
+    let texts = JSON.parse(localStorage.getItem('freeTexts_v7')) || [];
     let history = null;
 
     function init() { renderMaint(); syncSeats(); renderTexts(); }
@@ -353,7 +359,6 @@
             history = cur;
             draw();
             document.getElementById('undoBtn').style.display = 'inline-flex';
-            if(document.getElementById('undoSpacer')) document.getElementById('undoSpacer').style.display = 'block';
         }
     }
 
@@ -371,9 +376,7 @@
     function undoResult() {
         if(!history) return;
         for(let id in history) { const e=document.getElementById(id); if(e) e.innerText=history[id]; }
-        document.getElementById('undoBtn').style.display='none';
-        if(document.getElementById('undoSpacer')) document.getElementById('undoSpacer').style.display='none';
-        history=null;
+        document.getElementById('undoBtn').style.display='none'; history=null;
     }
 
     function addFreeText() {
@@ -396,7 +399,7 @@
     }
 
     function deleteText(id) { texts = texts.filter(x => x.id !== id); renderTexts(); }
-    function saveAll() { localStorage.setItem('staffCounts_v5', JSON.stringify(counts)); localStorage.setItem('staffNames_v5', JSON.stringify(names)); localStorage.setItem('seatPos_v5', JSON.stringify(pos)); localStorage.setItem('freeTexts_v5', JSON.stringify(texts)); alert('設定をブラウザに保存しました。'); }
+    function saveAll() { localStorage.setItem('staffCounts_v7', JSON.stringify(counts)); localStorage.setItem('staffNames_v7', JSON.stringify(names)); localStorage.setItem('seatPos_v7', JSON.stringify(pos)); localStorage.setItem('freeTexts_v7', JSON.stringify(texts)); alert('設定を保存しました。'); }
     function exportConfig() { const blob = new Blob([JSON.stringify({counts,names,pos,texts})],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `座席設定.json`; a.click(); }
     function importConfig(input) { const reader = new FileReader(); reader.onload = (e) => { try { const d = JSON.parse(e.target.result); counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; saveAll(); location.reload(); } catch(err) { alert('読み込みに失敗しました。'); } }; reader.readAsText(input.files[0]); }
     function resetNames() { if(confirm('職員名を消去しますか？')){ names={}; renderMaint(); syncSeats(); } }
