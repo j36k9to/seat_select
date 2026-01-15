@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>座席抽選システム - UI最適化版</title>
+    <style>
+        :root {
+            --color-blue-600: #0062cc;
+            --color-gray-900: #1a1a1a;
+            --color-gray-700: #4d4d4d;
+            --color-gray-200: #dbdbdb;
+            --color-gray-50: #f2f2f2;
+            --color-white: #ffffff;
+            --color-error: #d43d35;
+            --color-focus: #ffdd00;
+            --font-main: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-gray-50);
+            color: var(--color-gray-900);
+            margin: 0;
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--color-white);
+            padding: clamp(16px, 4vw, 32px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 4px solid var(--color-blue-600);
+            padding-bottom: 12px;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+
+        button {
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary { background-color: var(--color-blue-600); color: var(--color-white); }
+        .btn-secondary { background-color: var(--color-white); color: var(--color-blue-600); border-color: var(--color-blue-600); }
+        .btn-outline { background-color: var(--color-white); color: var(--color-gray-900); border-color: var(--color-gray-900); }
+        .btn-danger { background-color: var(--color-white); color: var(--color-error); border-color: var(--color-error); }
+
+        #maintenanceArea {
+            display: none;
+            background: #fafafa;
+            border: 1px solid var(--color-gray-200);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .role-group {
+            background: var(--color-white);
+            padding: 16px;
+            border: 1px solid var(--color-gray-200);
+            margin-bottom: 16px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        input[type="text"], select {
+            font-size: 1rem;
+            height: 48px;
+            border: 1px solid var(--color-gray-700);
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 12px;
+        }
+
+        /* 修正点：カラーピッカーのスタイル調整 */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: 1px solid var(--color-gray-700);
+            border-radius: 4px;
+            height: 48px;
+            width: 60px;
+            padding: 4px;
+            background: var(--color-white);
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 2px; }
+
+        .controls-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .seat-area {
+            position: relative;
+            width: 100%;
+            height: 65vh;
+            background: var(--color-white);
+            border: 1px solid var(--color-gray-900);
+            overflow: hidden;
+            background-image: radial-gradient(var(--color-gray-200) 1px, transparent 1px);
+            background-size: 24px 24px;
+            touch-action: none;
+        }
+
+        .seat {
+            position: absolute;
+            width: 135px;
+            height: 75px;
+            border: 2px solid var(--color-gray-900);
+            background: var(--color-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            user-select: none;
+            box-sizing: border-box;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .seat-name { font-size: 1.2rem; font-weight: 700; }
+
+        .free-text { 
+            position: absolute; 
+            cursor: move; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            white-space: nowrap; 
+            z-index: 5;
+            padding: 4px;
+            border: 1px solid transparent;
+        }
+        
+        .free-text:hover { border: 1px dashed var(--color-gray-200); }
+
+        .delete-text { 
+            color: var(--color-error); 
+            margin-left: 8px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            background: white; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            display: none;
+            align-items: center; 
+            justify-content: center; 
+            border: 1px solid var(--color-error);
+            font-weight: normal;
+        }
+
+        .free-text:hover .delete-text { display: flex; }
+
+        .admin-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            border-top: 1px solid var(--color-gray-200);
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        @media print {
+            .header-bar, #maintenanceArea, .controls-main, .delete-text { display: none !important; }
+            .seat-area { border: none !important; height: auto !important; overflow: visible !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>座席抽選システム</h1>
+        <button class="btn-secondary" id="maintToggle" onclick="toggleMaintenance()">🛠 設定を開く</button>
+    </div>
+
+    <div id="maintenanceArea">
+        <div class="role-group">
+            <p style="margin-top:0; font-weight:700;">設定データの書き出し・読み込み</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-outline" onclick="exportConfig()">PCに保存（配布用）</button>
+                <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
+                <button class="btn-outline" onclick="document.getElementById('importFile').click()">ファイルを読み込む</button>
+            </div>
+        </div>
+
+        <div id="roleInputs"></div>
+
+        <div class="role-group">
+            <p style="margin-top:0; font-weight:700;">ラベルの追加</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="newText" placeholder="例: 入口" style="width:180px;">
+                <input type="color" id="textColor" value="#1a1a1a" title="文字色を選択">
+                <select id="textSize" style="width:100px;">
+                    <option value="16px">小</option>
+                    <option value="24px" selected>中</option>
+                    <option value="36px">大</option>
+                </select>
+                <button class="btn-primary" onclick="addFreeText()">追加</button>
+            </div>
+        </div>
+
+        <div class="admin-actions">
+            <button class="btn-primary" style="padding: 12px 32px;" onclick="saveAll()">ブラウザに現在の構成を保存</button>
+            <button class="btn-secondary" onclick="window.print()">印刷・PDF出力</button>
+            <button class="btn-danger" onclick="resetNames()">登録名をクリア</button>
+            <button class="btn-danger" onclick="fullReset()">全設定をリセット</button>
+        </div>
+    </div>
+
+    <div class="controls-main">
+        <div style="width: 120px; visibility: hidden;" id="undoSpacer"></div>
+        <button class="btn-primary" style="flex-grow: 1; max-width: 400px; font-size: 1.5rem; padding: 20px;" onclick="confirmAndDraw()">座席を抽選する</button>
+        <div style="width: 120px; text-align: left;">
+            <button id="undoBtn" class="btn-outline" style="display:none; font-size: 0.9rem;" onclick="undoResult()">⤶ 戻す</button>
+        </div>
+    </div>
+
+    <div id="seatArea" class="seat-area"></div>
+</div>
+
+<script>
+    const SNAP = 12;
+    let counts = JSON.parse(localStorage.getItem('staffCounts_v5')) || { kanri: 2, shomu: 2, general: 14 };
+    let names = JSON.parse(localStorage.getItem('staffNames_v5')) || {};
+    let pos = JSON.parse(localStorage.getItem('seatPos_v5')) || {};
+    let texts = JSON.parse(localStorage.getItem('freeTexts_v5')) || [];
+    let history = null;
+
+    function init() { renderMaint(); syncSeats(); renderTexts(); }
+
+    function toggleMaintenance() {
+        const area = document.getElementById('maintenanceArea');
+        const btn = document.getElementById('maintToggle');
+        const isOpen = area.style.display === 'block';
+        area.style.display = isOpen ? 'none' : 'block';
+        btn.innerText = isOpen ? '🛠 設定を開く' : '✖ 設定を閉じる';
+    }
+
+    function renderMaint() {
+        const container = document.getElementById('roleInputs');
+        container.innerHTML = '';
+        const roles = [{k:'kanri', l:'管理職'}, {k:'shomu', l:'庶務'}, {k:'general', l:'一般職'}];
+        roles.forEach(role => {
+            let items = '';
+            for(let i=1; i<=counts[role.k]; i++) {
+                const val = names[`${role.k}-${i}`] || '';
+                items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${val}" onchange="names['${role.k}-${i}']=this.value"></div>`;
+            }
+            container.innerHTML += `
+                <div class="role-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <strong>${role.l}</strong>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',-1)">ー</button>
+                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',1)">＋</button>
+                        </div>
+                    </div>
+                    <div class="input-grid">${items}</div>
+                </div>`;
+        });
+    }
+
+    function updateCount(k, d) {
+        if(counts[k]+d < 0) return;
+        counts[k] += d; renderMaint(); syncSeats();
+    }
+
+    function syncSeats() {
+        const area = document.getElementById('seatArea');
+        area.querySelectorAll('.seat').forEach(s => s.remove());
+        const list = [];
+        for(let i=1; i<=counts.kanri; i++) list.push({id:`kanri-${i}`});
+        list.push({id:`shomu-special`});
+        for(let i=1; i<=(counts.general + counts.shomu - 1); i++) list.push({id:`general-${i}`});
+
+        list.forEach((d, i) => {
+            const el = document.createElement('div');
+            el.className = 'seat'; el.id = `box-${d.id}`;
+            el.innerHTML = `<div class="seat-name" id="name-${d.id}">---</div>`;
+            el.style.left = pos[d.id]?.left || (24 + (i%5)*150)+"px";
+            el.style.top = pos[d.id]?.top || (24 + Math.floor(i/5)*90)+"px";
+            makeDraggable(el, (p) => pos[d.id] = p);
+            area.appendChild(el);
+        });
+    }
+
+    function makeDraggable(el, onStop) {
+        let startX, startY, initialL, initialT;
+        const onStart = (e) => {
+            if(e.target.className === 'delete-text') return;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            startX = clientX; startY = clientY;
+            initialL = el.offsetLeft; initialT = el.offsetTop;
+            document.addEventListener(e.type.includes('touch') ? 'touchmove' : 'mousemove', onMove, { passive: false });
+            document.addEventListener(e.type.includes('touch') ? 'touchend' : 'mouseup', onEnd);
+        };
+        const onMove = (e) => {
+            e.preventDefault();
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            el.style.left = (initialL + (clientX - startX)) + "px";
+            el.style.top = (initialT + (clientY - startY)) + "px";
+        };
+        const onEnd = () => {
+            const L = Math.round(el.offsetLeft/SNAP)*SNAP+"px";
+            const T = Math.round(el.offsetTop/SNAP)*SNAP+"px";
+            el.style.left = L; el.style.top = T;
+            onStop({left: L, top: T});
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('touchend', onEnd);
+            document.removeEventListener('mouseup', onEnd);
+        };
+        el.addEventListener('mousedown', onStart);
+        el.addEventListener('touchstart', onStart, { passive: false });
+    }
+
+    function confirmAndDraw() {
+        if(confirm('座席の抽選を実行しますか？')){
+            const cur = {}; document.querySelectorAll('.seat-name').forEach(e => cur[e.id]=e.innerText);
+            history = cur;
+            draw();
+            document.getElementById('undoBtn').style.display = 'inline-flex';
+            if(document.getElementById('undoSpacer')) document.getElementById('undoSpacer').style.display = 'block';
+        }
+    }
+
+    function draw() {
+        const get = (k) => Array.from({length:counts[k]}, (_,i) => names[`${k}-${i+1}`] || `${k}${i+1}`);
+        const ks = get('kanri').sort(()=>Math.random()-0.5);
+        const ss = get('shomu').sort(()=>Math.random()-0.5);
+        const gs = [...ss.slice(1), ...get('general')].sort(()=>Math.random()-0.5);
+        ks.forEach((n,i) => { const e=document.getElementById(`name-kanri-${i+1}`); if(e) e.innerText=n; });
+        const specEl = document.getElementById('name-shomu-special');
+        if(specEl) specEl.innerText = ss[0] || '---';
+        gs.forEach((n,i) => { const e=document.getElementById(`name-general-${i+1}`); if(e) e.innerText=n; });
+    }
+
+    function undoResult() {
+        if(!history) return;
+        for(let id in history) { const e=document.getElementById(id); if(e) e.innerText=history[id]; }
+        document.getElementById('undoBtn').style.display='none';
+        if(document.getElementById('undoSpacer')) document.getElementById('undoSpacer').style.display='none';
+        history=null;
+    }
+
+    function addFreeText() {
+        const val = document.getElementById('newText').value; if(!val) return;
+        const color = document.getElementById('textColor').value;
+        const size = document.getElementById('textSize').value;
+        const t = { id:'t'+Date.now(), text:val, color:color, size:size, left:'100px', top:'100px' };
+        texts.push(t); renderTexts(); document.getElementById('newText').value = '';
+    }
+
+    function renderTexts() {
+        document.querySelectorAll('.free-text').forEach(e => e.remove());
+        texts.forEach(t => {
+            const el = document.createElement('div'); el.className = 'free-text'; el.id = t.id;
+            el.style.cssText = `color:${t.color}; font-size:${t.size}; left:${t.left}; top:${t.top};`;
+            el.innerHTML = `<span>${t.text}</span><span class="delete-text" onclick="deleteText('${t.id}')">×</span>`;
+            makeDraggable(el, (p) => { const target = texts.find(x => x.id === t.id); if(target) { target.left=p.left; target.top=p.top; } });
+            document.getElementById('seatArea').appendChild(el);
+        });
+    }
+
+    function deleteText(id) { texts = texts.filter(x => x.id !== id); renderTexts(); }
+    function saveAll() { localStorage.setItem('staffCounts_v5', JSON.stringify(counts)); localStorage.setItem('staffNames_v5', JSON.stringify(names)); localStorage.setItem('seatPos_v5', JSON.stringify(pos)); localStorage.setItem('freeTexts_v5', JSON.stringify(texts)); alert('設定をブラウザに保存しました。'); }
+    function exportConfig() { const blob = new Blob([JSON.stringify({counts,names,pos,texts})],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `座席設定.json`; a.click(); }
+    function importConfig(input) { const reader = new FileReader(); reader.onload = (e) => { try { const d = JSON.parse(e.target.result); counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; saveAll(); location.reload(); } catch(err) { alert('読み込みに失敗しました。'); } }; reader.readAsText(input.files[0]); }
+    function resetNames() { if(confirm('職員名を消去しますか？')){ names={}; renderMaint(); syncSeats(); } }
+    function fullReset() { if(confirm('全てを初期化しますか？')){ localStorage.clear(); location.reload(); } }
+
+    init();
+</script>
+
+</body>
+</html>
