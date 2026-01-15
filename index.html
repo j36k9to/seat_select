@@ -1,444 +1,317 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - 高視認性Webフォント版</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>座席抽選システム</title>
 
-    <style>
-        :root {
-            --color-blue-600: #0062cc;
-            --color-gray-900: #1a1a1a;
-            --color-gray-700: #4d4d4d;
-            --color-gray-200: #dbdbdb;
-            --color-gray-50: #f2f2f2;
-            --color-white: #ffffff;
-            --color-error: #d43d35;
-            /* Webフォントを最優先に指定 */
-            --font-main: 'BIZ UDPGothic', "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", "Yu Gothic", sans-serif;
-        }
+<style>
+:root {
+    --blue:#0062cc;
+    --gray900:#1a1a1a;
+    --gray200:#dbdbdb;
+    --gray50:#f2f2f2;
+    --white:#fff;
+    --danger:#d43d35;
+    --font:"Hiragino Kaku Gothic ProN","BIZ UDPGothic","Meiryo","Yu Gothic",sans-serif;
+}
+body{
+    margin:0;padding:16px;
+    font-family:var(--font);
+    background:var(--gray50);
+}
+.container{
+    max-width:1200px;
+    margin:auto;
+    background:var(--white);
+    padding:24px;
+}
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:4px solid var(--blue);
+    padding-bottom:12px;
+}
+button{
+    font-family:var(--font);
+    font-weight:700;
+    padding:10px 20px;
+    border-radius:6px;
+    cursor:pointer;
+    border:2px solid transparent;
+}
+.primary{background:var(--blue);color:#fff;}
+.secondary{background:#fff;color:var(--blue);border-color:var(--blue);}
+.outline{background:#fff;border-color:#000;}
+.danger{background:#fff;color:var(--danger);border-color:var(--danger);}
 
-        body {
-            font-family: var(--font-main);
-            background-color: var(--color-gray-50);
-            color: var(--color-gray-900);
-            margin: 0;
-            padding: 16px;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-        }
+#maintenance{display:none;margin-top:20px;}
+.role-group{
+    border:1px solid var(--gray200);
+    padding:16px;
+    margin-bottom:16px;
+    border-radius:8px;
+}
+.input-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:12px;
+}
+input,select{
+    height:48px;
+    padding:0 12px;
+    font-size:1rem;
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--color-white);
-            padding: clamp(16px, 4vw, 32px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            border-bottom: 4px solid var(--color-blue-600);
-            padding-bottom: 12px;
-        }
-
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.05em; }
-
-        button {
-            font-family: var(--font-main);
-            font-size: 1rem;
-            font-weight: 700;
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            min-height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-primary { background-color: var(--color-blue-600); color: var(--color-white); }
-        .btn-secondary { background-color: var(--color-white); color: var(--color-blue-600); border-color: var(--color-blue-600); }
-        .btn-outline { background-color: var(--color-white); color: var(--color-gray-900); border-color: var(--color-gray-900); }
-        .btn-danger { background-color: var(--color-white); color: var(--color-error); border-color: var(--color-error); }
-
-        #maintenanceArea {
-            display: none;
-            background: #fafafa;
-            border: 1px solid var(--color-gray-200);
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .role-group {
-            background: var(--color-white);
-            padding: 16px;
-            border: 1px solid var(--color-gray-200);
-            margin-bottom: 16px;
-            border-radius: 8px;
-        }
-
-        .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        input[type="text"], select {
-            font-family: var(--font-main);
-            font-size: 1rem;
-            height: 48px;
-            border: 2px solid var(--color-gray-200);
-            border-radius: 6px;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 0 12px;
-        }
-
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: 2px solid var(--color-gray-200);
-            border-radius: 6px;
-            height: 48px;
-            width: 60px;
-            padding: 4px;
-            background: var(--color-white);
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-        .controls-main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            margin: 24px 0;
-        }
-
-        .seat-area {
-            position: relative;
-            width: 100%;
-            height: 65vh;
-            background: var(--color-white);
-            border: 2.5px solid var(--color-gray-900);
-            overflow: hidden;
-            background-image: radial-gradient(var(--color-gray-200) 1px, transparent 1px);
-            background-size: 24px 24px;
-            touch-action: none;
-        }
-
-        .seat {
-            position: absolute;
-            width: 140px;
-            height: 80px;
-            border: 2.5px solid var(--color-gray-900);
-            background: var(--color-white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: move;
-            user-select: none;
-            box-sizing: border-box;
-            z-index: 10;
-            text-align: center;
-            border-radius: 4px;
-        }
-
-        .seat-name { 
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            letter-spacing: -0.02em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0 4px;
-        }
-
-        .free-text { 
-            position: absolute; 
-            cursor: move; 
-            font-weight: 700; 
-            display: flex; 
-            align-items: center; 
-            white-space: nowrap; 
-            z-index: 5;
-            padding: 4px;
-        }
-
-        .delete-text { 
-            color: var(--color-error); 
-            margin-left: 8px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            background: white; 
-            border-radius: 50%; 
-            width: 22px; 
-            height: 22px; 
-            display: none;
-            align-items: center; 
-            justify-content: center; 
-            border: 2px solid var(--color-error);
-        }
-
-        .free-text:hover .delete-text { display: flex; }
-
-        .admin-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            border-top: 1px solid var(--color-gray-200);
-            padding-top: 24px;
-            margin-top: 24px;
-        }
-
-        @media print {
-            .header-bar, #maintenanceArea, .controls-main, .delete-text { display: none !important; }
-            .seat-area { border: none !important; height: auto !important; overflow: visible !important; }
-            .seat { border: 2.5px solid #000 !important; }
-        }
-    </style>
+.controls{
+    display:flex;
+    justify-content:center;
+    margin:24px 0;
+}
+.seat-area{
+    position:relative;
+    width:100%;
+    height:65vh;
+    border:2px solid #000;
+    background:
+      radial-gradient(var(--gray200) 1px, transparent 1px);
+    background-size:24px 24px;
+}
+.seat{
+    position:absolute;
+    width:140px;
+    height:80px;
+    border:2px solid #000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:move;
+    background:#fff;
+}
+.seat-name{
+    font-size:1.5rem;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.free-text{
+    position:absolute;
+    font-weight:800;
+    cursor:move;
+}
+.delete-text{
+    margin-left:8px;
+    color:var(--danger);
+    cursor:pointer;
+    display:none;
+}
+.free-text:hover .delete-text{display:inline;}
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <div class="header-bar">
-        <h1>座席抽選システム</h1>
-        <button class="btn-secondary" id="maintToggle" onclick="toggleMaintenance()">🛠 設定を開く</button>
-    </div>
 
-    <div id="maintenanceArea">
-        <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">データの入出力</p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn-outline" onclick="exportConfig()">PCに保存（配布用）</button>
-                <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
-                <button class="btn-outline" onclick="document.getElementById('importFile').click()">ファイルを読み込む</button>
-            </div>
-        </div>
+<div class="header">
+<h1>座席抽選システム</h1>
+<button class="secondary" onclick="toggleMaint()">🛠 設定</button>
+</div>
 
-        <div id="roleInputs"></div>
+<div id="maintenance">
+<div class="role-group">
+<strong>データ</strong><br><br>
+<button class="outline" onclick="exportConfig()">保存</button>
+<input type="file" id="importFile" hidden>
+<button class="outline" onclick="document.getElementById('importFile').click()">読込</button>
+</div>
 
-        <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">ラベルの追加</p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-                <input type="text" id="newText" placeholder="例: 入口" style="width:180px;">
-                <input type="color" id="textColor" value="#1a1a1a" title="文字色を選択">
-                <select id="textSize" style="width:100px;">
-                    <option value="16px">小</option>
-                    <option value="24px" selected>中</option>
-                    <option value="36px">大</option>
-                </select>
-                <button class="btn-primary" onclick="addFreeText()">追加</button>
-            </div>
-        </div>
+<div id="roleInputs"></div>
 
-        <div class="admin-actions">
-            <button class="btn-primary" style="padding: 12px 32px;" onclick="saveAll()">ブラウザに現在の構成を保存</button>
-            <button class="btn-secondary" onclick="window.print()">印刷・PDF出力</button>
-            <button class="btn-danger" onclick="resetNames()">登録名をクリア</button>
-            <button class="btn-danger" onclick="fullReset()">全設定をリセット</button>
-        </div>
-    </div>
+<div class="role-group">
+<strong>ラベル追加</strong><br><br>
+<input id="newText" placeholder="例：入口">
+<input type="color" id="textColor" value="#000000">
+<select id="textSize">
+<option value="16px">小</option>
+<option value="24px" selected>中</option>
+<option value="36px">大</option>
+</select>
+<button class="primary" onclick="addFreeText()">追加</button>
+</div>
 
-    <div class="controls-main">
-        <div style="width: 100px; visibility: hidden;"></div>
-        <button class="btn-primary" style="flex-grow: 1; max-width: 400px; font-size: 1.5rem; padding: 20px; border-radius: 12px;" onclick="confirmAndDraw()">座席を抽選する</button>
-        <div style="width: 100px; text-align: left;">
-            <button id="undoBtn" class="btn-outline" style="display:none; font-size: 0.9rem; min-height: 40px;" onclick="undoResult()">⤶ 戻す</button>
-        </div>
-    </div>
+<div class="role-group">
+<button class="primary" onclick="saveAll()">保存</button>
+<button class="secondary" onclick="print()">印刷</button>
+<button class="danger" onclick="resetNames()">名前クリア</button>
+<button class="danger" onclick="fullReset()">全リセット</button>
+</div>
+</div>
 
-    <div id="seatArea" class="seat-area"></div>
+<div class="controls">
+<button class="primary" style="font-size:1.5rem;padding:20px;" onclick="confirmDraw()">座席を抽選</button>
+</div>
+
+<div id="seatArea" class="seat-area"></div>
 </div>
 
 <script>
-    const SNAP = 12;
-    // ローカルストレージのキーをv8に更新して整合性を確保
-    const STORAGE_KEY_PREFIX = 'seat_system_v8_';
-    
-    let counts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'counts')) || { kanri: 2, shomu: 2, general: 14 };
-    let names = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'names')) || {};
-    let pos = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'pos')) || {};
-    let texts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'texts')) || [];
-    let history = null;
+const SNAP=12;
+let counts=JSON.parse(localStorage.getItem('counts'))||{kanri:2,shomu:2,general:14};
+let names=JSON.parse(localStorage.getItem('names'))||{};
+let pos=JSON.parse(localStorage.getItem('pos'))||{};
+let texts=JSON.parse(localStorage.getItem('texts'))||[];
+let history=null;
 
-    function init() { renderMaint(); syncSeats(); renderTexts(); }
+function toggleMaint(){
+ const m=document.getElementById('maintenance');
+ m.style.display=m.style.display==='block'?'none':'block';
+}
 
-    function toggleMaintenance() {
-        const area = document.getElementById('maintenanceArea');
-        const btn = document.getElementById('maintToggle');
-        const isOpen = area.style.display === 'block';
-        area.style.display = isOpen ? 'none' : 'block';
-        btn.innerText = isOpen ? '🛠 設定を開く' : '✖ 設定を閉じる';
-    }
+function renderMaint(){
+ const c=document.getElementById('roleInputs');
+ c.textContent='';
+ const roles=[['kanri','管理職'],['shomu','庶務'],['general','一般職']];
+ roles.forEach(([k,l])=>{
+  const g=document.createElement('div');
+  g.className='role-group';
+  const title=document.createElement('strong');
+  title.textContent=l;
+  g.appendChild(title);
 
-    function renderMaint() {
-        const container = document.getElementById('roleInputs');
-        container.innerHTML = '';
-        const roles = [{k:'kanri', l:'管理職'}, {k:'shomu', l:'庶務'}, {k:'general', l:'一般職'}];
-        roles.forEach(role => {
-            let items = '';
-            for(let i=1; i<=counts[role.k]; i++) {
-                const val = names[`${role.k}-${i}`] || '';
-                items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${val}" onchange="names['${role.k}-${i}']=this.value"></div>`;
-            }
-            container.innerHTML += `
-                <div class="role-group">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <strong>${role.l}</strong>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',-1)">ー</button>
-                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',1)">＋</button>
-                        </div>
-                    </div>
-                    <div class="input-grid">${items}</div>
-                </div>`;
-        });
-    }
+  const grid=document.createElement('div');
+  grid.className='input-grid';
 
-    function updateCount(k, d) {
-        if(counts[k]+d < 0) return;
-        counts[k] += d; renderMaint(); syncSeats();
-    }
+  for(let i=1;i<=counts[k];i++){
+   const input=document.createElement('input');
+   input.placeholder=l+i;
+   input.value=names[`${k}-${i}`]||'';
+   input.addEventListener('change',()=>names[`${k}-${i}`]=input.value);
+   grid.appendChild(input);
+  }
+  g.appendChild(grid);
+  c.appendChild(g);
+ });
+}
 
-    function syncSeats() {
-        const area = document.getElementById('seatArea');
-        area.querySelectorAll('.seat').forEach(s => s.remove());
-        const list = [];
-        for(let i=1; i<=counts.kanri; i++) list.push({id:`kanri-${i}`});
-        list.push({id:`shomu-special`});
-        for(let i=1; i<=(counts.general + counts.shomu - 1); i++) list.push({id:`general-${i}`});
+function syncSeats(){
+ const area=document.getElementById('seatArea');
+ area.querySelectorAll('.seat').forEach(e=>e.remove());
+ const list=[];
+ for(let i=1;i<=counts.kanri;i++)list.push(`kanri-${i}`);
+ list.push('shomu-special');
+ for(let i=1;i<counts.general+counts.shomu;i++)list.push(`general-${i}`);
 
-        list.forEach((d, i) => {
-            const el = document.createElement('div');
-            el.className = 'seat'; el.id = `box-${d.id}`;
-            el.innerHTML = `<div class="seat-name" id="name-${d.id}">---</div>`;
-            el.style.left = pos[d.id]?.left || (24 + (i%5)*150)+"px";
-            el.style.top = pos[d.id]?.top || (24 + Math.floor(i/5)*90)+"px";
-            makeDraggable(el, (p) => pos[d.id] = p);
-            area.appendChild(el);
-        });
-    }
+ list.forEach((id,i)=>{
+  const d=document.createElement('div');
+  d.className='seat';
+  d.id=id;
+  const name=document.createElement('div');
+  name.className='seat-name';
+  name.id='name-'+id;
+  name.textContent='---';
+  d.appendChild(name);
+  d.style.left=pos[id]?.left||(20+(i%5)*150)+'px';
+  d.style.top=pos[id]?.top||(20+Math.floor(i/5)*90)+'px';
+  makeDrag(d,p=>pos[id]=p);
+  area.appendChild(d);
+ });
+}
 
-    function makeDraggable(el, onStop) {
-        let startX, startY, initialL, initialT;
-        const onStart = (e) => {
-            if(e.target.className === 'delete-text') return;
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            startX = clientX; startY = clientY;
-            initialL = el.offsetLeft; initialT = el.offsetTop;
-            document.addEventListener(e.type.includes('touch') ? 'touchmove' : 'mousemove', onMove, { passive: false });
-            document.addEventListener(e.type.includes('touch') ? 'touchend' : 'mouseup', onEnd);
-        };
-        const onMove = (e) => {
-            e.preventDefault();
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            el.style.left = (initialL + (clientX - startX)) + "px";
-            el.style.top = (initialT + (clientY - startY)) + "px";
-        };
-        const onEnd = () => {
-            const L = Math.round(el.offsetLeft/SNAP)*SNAP+"px";
-            const T = Math.round(el.offsetTop/SNAP)*SNAP+"px";
-            el.style.left = L; el.style.top = T;
-            onStop({left: L, top: T});
-            document.removeEventListener('touchmove', onMove);
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('touchend', onEnd);
-            document.removeEventListener('mouseup', onEnd);
-        };
-        el.addEventListener('mousedown', onStart);
-        el.addEventListener('touchstart', onStart, { passive: false });
-    }
+function makeDrag(el,cb){
+ let sx,sy,ol,ot;
+ el.onmousedown=e=>{
+  sx=e.clientX;sy=e.clientY;
+  ol=el.offsetLeft;ot=el.offsetTop;
+  document.onmousemove=m=>{
+   el.style.left=ol+(m.clientX-sx)+'px';
+   el.style.top=ot+(m.clientY-sy)+'px';
+  };
+  document.onmouseup=()=>{
+   el.style.left=Math.round(el.offsetLeft/SNAP)*SNAP+'px';
+   el.style.top=Math.round(el.offsetTop/SNAP)*SNAP+'px';
+   cb({left:el.style.left,top:el.style.top});
+   document.onmousemove=null;
+  };
+ };
+}
 
-    function confirmAndDraw() {
-        if(confirm('座席の抽選を実行しますか？')){
-            const cur = {}; document.querySelectorAll('.seat-name').forEach(e => cur[e.id]=e.innerText);
-            history = cur;
-            draw();
-            document.getElementById('undoBtn').style.display = 'inline-flex';
-        }
-    }
+function confirmDraw(){
+ if(confirm('抽選しますか？')){
+  history={};
+  document.querySelectorAll('.seat-name').forEach(e=>history[e.id]=e.textContent);
+  draw();
+ }
+}
 
-    function draw() {
-        const get = (k) => Array.from({length:counts[k]}, (_,i) => names[`${k}-${i+1}`] || `${k}${i+1}`);
-        const ks = get('kanri').sort(()=>Math.random()-0.5);
-        const ss = get('shomu').sort(()=>Math.random()-0.5);
-        const gs = [...ss.slice(1), ...get('general')].sort(()=>Math.random()-0.5);
-        ks.forEach((n,i) => { const e=document.getElementById(`name-kanri-${i+1}`); if(e) e.innerText=n; });
-        const specEl = document.getElementById('name-shomu-special');
-        if(specEl) specEl.innerText = ss[0] || '---';
-        gs.forEach((n,i) => { const e=document.getElementById(`name-general-${i+1}`); if(e) e.innerText=n; });
-    }
+function draw(){
+ const g=k=>Array.from({length:counts[k]},(_,i)=>names[`${k}-${i+1}`]||`${k}${i+1}`)
+  .sort(()=>Math.random()-0.5);
+ g('kanri').forEach((n,i)=>set(`kanri-${i+1}`,n));
+ const s=g('shomu');
+ set('shomu-special',s[0]||'---');
+ [...s.slice(1),...g('general')].forEach((n,i)=>set(`general-${i+1}`,n));
+}
+function set(id,v){
+ const e=document.getElementById('name-'+id);
+ if(e)e.textContent=v;
+}
 
-    function undoResult() {
-        if(!history) return;
-        for(let id in history) { const e=document.getElementById(id); if(e) e.innerText=history[id]; }
-        document.getElementById('undoBtn').style.display='none'; history=null;
-    }
+function addFreeText(){
+ const t=document.getElementById('newText').value;
+ if(!t)return;
+ texts.push({id:'t'+Date.now(),text:t,color:textColor.value,size:textSize.value,left:'100px',top:'100px'});
+ renderTexts();
+ document.getElementById('newText').value='';
+}
 
-    function addFreeText() {
-        const val = document.getElementById('newText').value; if(!val) return;
-        const color = document.getElementById('textColor').value;
-        const size = document.getElementById('textSize').value;
-        const t = { id:'t'+Date.now(), text:val, color:color, size:size, left:'100px', top:'100px' };
-        texts.push(t); renderTexts(); document.getElementById('newText').value = '';
-    }
+function renderTexts(){
+ document.querySelectorAll('.free-text').forEach(e=>e.remove());
+ texts.forEach(t=>{
+  const d=document.createElement('div');
+  d.className='free-text';
+  d.style.color=t.color;
+  d.style.fontSize=t.size;
+  d.style.left=t.left;
+  d.style.top=t.top;
 
-    function renderTexts() {
-        document.querySelectorAll('.free-text').forEach(e => e.remove());
-        texts.forEach(t => {
-            const el = document.createElement('div'); el.className = 'free-text'; el.id = t.id;
-            el.style.cssText = `color:${t.color}; font-size:${t.size}; left:${t.left}; top:${t.top};`;
-            el.innerHTML = `<span>${t.text}</span><span class="delete-text" onclick="deleteText('${t.id}')">×</span>`;
-            makeDraggable(el, (p) => { const target = texts.find(x => x.id === t.id); if(target) { target.left=p.left; target.top=p.top; } });
-            document.getElementById('seatArea').appendChild(el);
-        });
-    }
+  const s=document.createElement('span');
+  s.textContent=t.text;
+  const x=document.createElement('span');
+  x.textContent='×';
+  x.className='delete-text';
+  x.onclick=()=>{texts=texts.filter(e=>e.id!==t.id);renderTexts();};
 
-    function deleteText(id) { texts = texts.filter(x => x.id !== id); renderTexts(); }
+  d.appendChild(s);d.appendChild(x);
+  makeDrag(d,p=>{t.left=p.left;t.top=p.top;});
+  seatArea.appendChild(d);
+ });
+}
 
-    function saveAll() { 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'counts', JSON.stringify(counts)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'names', JSON.stringify(names)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'pos', JSON.stringify(pos)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'texts', JSON.stringify(texts)); 
-        alert('現在の設定と職員名を保存しました。'); 
-    }
+function saveAll(){
+ localStorage.setItem('counts',JSON.stringify(counts));
+ localStorage.setItem('names',JSON.stringify(names));
+ localStorage.setItem('pos',JSON.stringify(pos));
+ localStorage.setItem('texts',JSON.stringify(texts));
+ alert('保存しました');
+}
+function exportConfig(){
+ const b=new Blob([JSON.stringify({counts,names,pos,texts})]);
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(b);
+ a.download='seat.json';
+ a.click();
+}
+importFile.onchange=e=>{
+ const r=new FileReader();
+ r.onload=()=>{const d=JSON.parse(r.result);counts=d.counts;names=d.names;pos=d.pos;texts=d.texts;saveAll();location.reload();};
+ r.readAsText(e.target.files[0]);
+};
+function resetNames(){if(confirm('消去?')){names={};renderMaint();}}
+function fullReset(){if(confirm('全削除?')){localStorage.clear();location.reload();}}
 
-    function exportConfig() { 
-        const blob = new Blob([JSON.stringify({counts,names,pos,texts})],{type:'application/json'}); 
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
-        a.download = `座席設定.json`; a.click(); 
-    }
-
-    function importConfig(input) { 
-        const reader = new FileReader(); 
-        reader.onload = (e) => { 
-            try { 
-                const d = JSON.parse(e.target.result); 
-                counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; 
-                saveAll(); location.reload(); 
-            } catch(err) { alert('読み込みに失敗しました。'); } 
-        }; 
-        reader.readAsText(input.files[0]); 
-    }
-
-    function resetNames() { if(confirm('登録された職員名をすべて消去しますか？')){ names={}; renderMaint(); syncSeats(); saveAll(); } }
-    function fullReset() { if(confirm('すべての設定、配置、職員名を初期化しますか？')){ localStorage.clear(); location.reload(); } }
-
-    init();
+renderMaint();syncSeats();renderTexts();
 </script>
-
 </body>
 </html>
