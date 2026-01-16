@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - 庶務交代制版</title>
+    <title>座席抽選システム - セキュリティ強化版</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
             --color-gray-50: #f2f2f2;
             --color-white: #ffffff;
             --color-error: #d43d35;
-            --font-main: 'BIZ UDPGothic', "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", "Yu Gothic", sans-serif;
+            --font-main: 'BIZ UDPGothic', sans-serif;
         }
 
         body {
@@ -27,7 +27,6 @@
             color: var(--color-gray-900);
             margin: 0;
             padding: 16px;
-            line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -48,7 +47,7 @@
             padding-bottom: 12px;
         }
 
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.05em; }
+        h1 { margin: 0; font-size: 1.6rem; font-weight: 700; }
 
         button {
             font-family: var(--font-main);
@@ -91,7 +90,7 @@
             gap: 12px;
         }
 
-        input[type="text"], select {
+        input[type="text"] {
             font-family: var(--font-main);
             font-size: 1rem;
             height: 48px;
@@ -100,26 +99,6 @@
             width: 100%;
             box-sizing: border-box;
             padding: 0 12px;
-        }
-
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: 2px solid var(--color-gray-200);
-            border-radius: 6px;
-            height: 48px;
-            width: 60px;
-            padding: 4px;
-            background: var(--color-white);
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-        .controls-main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            margin: 24px 0;
         }
 
         .seat-area {
@@ -146,27 +125,18 @@
             justify-content: center;
             cursor: move;
             user-select: none;
-            box-sizing: border-box;
             z-index: 10;
-            text-align: center;
             border-radius: 4px;
-        }
-
-        .seat-label {
-            font-size: 0.7rem;
-            color: var(--color-gray-700);
-            margin-bottom: 2px;
         }
 
         .seat-name { 
             font-size: 1.5rem; 
             font-weight: 700; 
-            letter-spacing: -0.02em;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding: 0 4px;
-            width: 100%;
+            width: 90%;
+            text-align: center;
         }
 
         .free-text { 
@@ -175,7 +145,6 @@
             font-weight: 700; 
             display: flex; 
             align-items: center; 
-            white-space: nowrap; 
             z-index: 5;
             padding: 4px;
         }
@@ -183,16 +152,13 @@
         .delete-text { 
             color: var(--color-error); 
             margin-left: 8px; 
-            font-size: 1rem; 
             cursor: pointer; 
-            background: white; 
-            border-radius: 50%; 
-            width: 22px; 
-            height: 22px; 
             display: none;
-            align-items: center; 
-            justify-content: center; 
             border: 2px solid var(--color-error);
+            border-radius: 50%;
+            width: 20px; height: 20px;
+            justify-content: center; align-items: center;
+            background: white;
         }
 
         .free-text:hover .delete-text { display: flex; }
@@ -204,13 +170,11 @@
             justify-content: center;
             border-top: 1px solid var(--color-gray-200);
             padding-top: 24px;
-            margin-top: 24px;
         }
 
         @media print {
             .header-bar, #maintenanceArea, .controls-main, .delete-text { display: none !important; }
-            .seat-area { border: none !important; height: auto !important; overflow: visible !important; }
-            .seat { border: 2.5px solid #000 !important; }
+            .seat-area { border: none !important; height: auto !important; }
         }
     </style>
 </head>
@@ -224,9 +188,9 @@
 
     <div id="maintenanceArea">
         <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">データの入出力</p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn-outline" onclick="exportConfig()">PCに保存（配布用）</button>
+            <p style="font-weight:700;">データの入出力</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-outline" onclick="exportConfig()">保存用ファイル出力</button>
                 <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
                 <button class="btn-outline" onclick="document.getElementById('importFile').click()">ファイルを読み込む</button>
             </div>
@@ -235,58 +199,68 @@
         <div id="roleInputs"></div>
 
         <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">ラベルの追加</p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-                <input type="text" id="newText" placeholder="例: 入口" style="width:180px;">
-                <input type="color" id="textColor" value="#1a1a1a" title="文字色を選択">
-                <select id="textSize" style="width:100px;">
-                    <option value="16px">小</option>
-                    <option value="24px" selected>中</option>
-                    <option value="36px">大</option>
-                </select>
+            <p style="font-weight:700;">ラベル追加</p>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <input type="text" id="newText" placeholder="例: 入口" style="width:200px;">
                 <button class="btn-primary" onclick="addFreeText()">追加</button>
             </div>
         </div>
 
         <div class="admin-actions">
-            <button class="btn-primary" style="padding: 12px 32px;" onclick="saveAll()">ブラウザに現在の構成を保存</button>
-            <button class="btn-secondary" onclick="window.print()">印刷・PDF出力</button>
-            <button class="btn-danger" onclick="resetNames()">登録名をクリア</button>
-            <button class="btn-danger" onclick="fullReset()">全設定をリセット</button>
+            <button class="btn-primary" onclick="saveAll()">ブラウザに保存</button>
+            <button class="btn-secondary" onclick="window.print()">印刷・PDF</button>
+            <button class="btn-danger" onclick="resetNames()">名前クリア</button>
+            <button class="btn-danger" onclick="fullReset()">全リセット</button>
         </div>
     </div>
 
     <div class="controls-main">
-        <div style="width: 100px; visibility: hidden;"></div>
-        <button class="btn-primary" style="flex-grow: 1; max-width: 400px; font-size: 1.5rem; padding: 20px; border-radius: 12px;" onclick="confirmAndDraw()">座席を抽選する</button>
-        <div style="width: 100px; text-align: left;">
-            <button id="undoBtn" class="btn-outline" style="display:none; font-size: 0.9rem; min-height: 40px;" onclick="undoResult()">⤶ 戻す</button>
-        </div>
+        <button class="btn-primary" style="width: 300px; font-size: 1.4rem;" onclick="confirmAndDraw()">座席を抽選する</button>
+        <button id="undoBtn" class="btn-outline" style="display:none; margin-left:10px;" onclick="undoResult()">⤶ 戻す</button>
     </div>
 
     <div id="seatArea" class="seat-area"></div>
 </div>
 
 <script>
-    const SNAP = 12;
-    const STORAGE_KEY_PREFIX = 'seat_system_v10_';
-    
-    let counts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'counts')) || { shomu: 2, general: 14 };
-    let names = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'names')) || {};
-    let pos = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'pos')) || {};
-    let texts = JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'texts')) || [];
-    // 最後に庶務席に座った人のインデックス (0 or 1)
-    let lastShomuIndex = parseInt(localStorage.getItem(STORAGE_KEY_PREFIX + 'lastShomuIndex')) || 1; 
+    const STORAGE_KEY = 'seat_system_v11_secure';
+    let counts = { shomu: 2, general: 14 };
+    let names = {};
+    let pos = {};
+    let texts = [];
+    let lastShomuIndex = 1; 
     let history = null;
 
-    function init() { renderMaint(); syncSeats(); renderTexts(); }
+    // --- セキュリティ対策: サニタイズ関数 ---
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, function(m) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[m];
+        });
+    }
+
+    function init() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const d = JSON.parse(saved);
+            counts = d.counts || counts;
+            names = d.names || {};
+            pos = d.pos || {};
+            texts = d.texts || [];
+            lastShomuIndex = d.lastShomuIndex ?? 1;
+        }
+        renderMaint(); syncSeats(); renderTexts();
+    }
 
     function toggleMaintenance() {
         const area = document.getElementById('maintenanceArea');
-        const btn = document.getElementById('maintToggle');
-        const isOpen = area.style.display === 'block';
-        area.style.display = isOpen ? 'none' : 'block';
-        btn.innerText = isOpen ? '🛠 設定を開く' : '✖ 設定を閉じる';
+        area.style.display = (area.style.display === 'block') ? 'none' : 'block';
     }
 
     function renderMaint() {
@@ -296,42 +270,29 @@
         roles.forEach(role => {
             let items = '';
             for(let i=1; i<=counts[role.k]; i++) {
-                const val = names[`${role.k}-${i}`] || '';
-                items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${val}" onchange="names['${role.k}-${i}']=this.value"></div>`;
+                const val = escapeHTML(names[`${role.k}-${i}`] || '');
+                items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${val}" onchange="updateName('${role.k}-${i}', this.value)"></div>`;
             }
-            container.innerHTML += `
-                <div class="role-group">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <strong>${role.l} (${counts[role.k]}名)</strong>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',-1)">ー</button>
-                            <button class="btn-outline" style="min-height:36px; padding:0 15px;" onclick="updateCount('${role.k}',1)">＋</button>
-                        </div>
-                    </div>
-                    <div class="input-grid">${items}</div>
-                </div>`;
+            container.innerHTML += `<div class="role-group"><strong>${role.l}</strong><div class="input-grid">${items}</div></div>`;
         });
     }
 
-    function updateCount(k, d) {
-        if(counts[k]+d < 0) return;
-        counts[k] += d; renderMaint(); syncSeats();
+    function updateName(id, val) {
+        names[id] = escapeHTML(val);
     }
 
     function syncSeats() {
         const area = document.getElementById('seatArea');
         area.querySelectorAll('.seat').forEach(s => s.remove());
-        const list = [];
-        list.push({id:`shomu-special`, label:'庶務専用'});
-        for(let i=1; i<=(counts.general + counts.shomu - 1); i++) {
-            list.push({id:`general-${i}`, label:''});
-        }
+        const list = [{id:'shomu-special', label:'庶務席'}];
+        for(let i=1; i<=(counts.general + counts.shomu - 1); i++) list.push({id:`general-${i}`, label:''});
+
         list.forEach((d, i) => {
             const el = document.createElement('div');
             el.className = 'seat'; el.id = `box-${d.id}`;
-            el.innerHTML = `<div class="seat-label">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
-            el.style.left = pos[d.id]?.left || (24 + (i%5)*150)+"px";
-            el.style.top = pos[d.id]?.top || (24 + Math.floor(i/5)*90)+"px";
+            el.innerHTML = `<div style="font-size:0.7rem; color:#666">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
+            el.style.left = pos[d.id]?.left || (20 + (i%5)*150)+"px";
+            el.style.top = pos[d.id]?.top || (20 + Math.floor(i/5)*90)+"px";
             makeDraggable(el, (p) => pos[d.id] = p);
             area.appendChild(el);
         });
@@ -340,71 +301,44 @@
     function makeDraggable(el, onStop) {
         let startX, startY, initialL, initialT;
         const onStart = (e) => {
-            if(e.target.className === 'delete-text') return;
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            startX = clientX; startY = clientY;
+            if(e.target.classList.contains('delete-text')) return;
+            const c = e.type.includes('touch') ? e.touches[0] : e;
+            startX = c.clientX; startY = c.clientY;
             initialL = el.offsetLeft; initialT = el.offsetTop;
-            document.addEventListener(e.type.includes('touch') ? 'touchmove' : 'mousemove', onMove, { passive: false });
-            document.addEventListener(e.type.includes('touch') ? 'touchend' : 'mouseup', onEnd);
+            document.onmousemove = document.ontouchmove = (ev) => {
+                const moveC = ev.type.includes('touch') ? ev.touches[0] : ev;
+                el.style.left = (initialL + moveC.clientX - startX) + "px";
+                el.style.top = (initialT + moveC.clientY - startY) + "px";
+            };
+            document.onmouseup = document.ontouchend = () => {
+                document.onmousemove = document.ontouchmove = null;
+                onStop({left: el.style.left, top: el.style.top});
+            };
         };
-        const onMove = (e) => {
-            e.preventDefault();
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            el.style.left = (initialL + (clientX - startX)) + "px";
-            el.style.top = (initialT + (clientY - startY)) + "px";
-        };
-        const onEnd = () => {
-            const L = Math.round(el.offsetLeft/SNAP)*SNAP+"px";
-            const T = Math.round(el.offsetTop/SNAP)*SNAP+"px";
-            el.style.left = L; el.style.top = T;
-            onStop({left: L, top: T});
-            document.removeEventListener('touchmove', onMove);
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('touchend', onEnd);
-            document.removeEventListener('mouseup', onEnd);
-        };
-        el.addEventListener('mousedown', onStart);
-        el.addEventListener('touchstart', onStart, { passive: false });
+        el.onmousedown = el.ontouchstart = onStart;
     }
 
     function confirmAndDraw() {
-        if(confirm('座席の抽選を実行しますか？（庶務は交代で着席します）')){
-            const cur = {}; document.querySelectorAll('.seat-name').forEach(e => cur[e.id]=e.innerText);
-            history = cur;
+        if(confirm('抽選を実行しますか？')){
+            history = {}; 
+            document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
             draw();
             document.getElementById('undoBtn').style.display = 'inline-flex';
         }
     }
 
     function draw() {
-        // 1. 庶務2名を取得
-        const shomuNames = [
-            names['shomu-1'] || '庶務1',
-            names['shomu-2'] || '庶務2'
-        ];
+        const shomuNames = [names['shomu-1'] || '庶務1', names['shomu-2'] || '庶務2'];
+        const currentIdx = (lastShomuIndex === 0) ? 1 : 0;
+        const specName = shomuNames[currentIdx];
+        const subShomu = shomuNames[currentIdx === 0 ? 1 : 0];
         
-        // 2. 交代ロジック: 前回の次の人が庶務席へ
-        const currentShomuIdx = (lastShomuIndex === 0) ? 1 : 0;
-        const shomuForSpecial = shomuNames[currentShomuIdx];
-        const shomuForGeneral = shomuNames[(currentShomuIdx === 0) ? 1 : 0];
-        
-        // インデックスを更新して保存
-        lastShomuIndex = currentShomuIdx;
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'lastShomuIndex', lastShomuIndex);
+        lastShomuIndex = currentIdx;
+        const generalNames = Array.from({length:counts.general}, (_,i) => names[`general-${i+1}`] || `職員${i+1}`);
+        const combined = [subShomu, ...generalNames].sort(()=>Math.random()-0.5);
 
-        // 3. 一般職員14名を取得
-        const generalList = Array.from({length:counts.general}, (_,i) => names[`general-${i+1}`] || `職員${i+1}`);
-        
-        // 4. 一般席用をシャッフル
-        const combinedGeneralMembers = [shomuForGeneral, ...generalList].sort(()=>Math.random()-0.5);
-
-        // 5. 反映
-        const specEl = document.getElementById('name-shomu-special');
-        if(specEl) specEl.innerText = shomuForSpecial;
-
-        combinedGeneralMembers.forEach((n,i) => {
+        document.getElementById('name-shomu-special').innerText = specName;
+        combined.forEach((n,i) => {
             const e = document.getElementById(`name-general-${i+1}`);
             if(e) e.innerText = n;
         });
@@ -412,64 +346,59 @@
 
     function undoResult() {
         if(!history) return;
-        for(let id in history) { const e=document.getElementById(id); if(e) e.innerText=history[id]; }
-        // Undo時は交代インデックスを戻す
+        for(let id in history) document.getElementById(id).innerText = history[id];
         lastShomuIndex = (lastShomuIndex === 0) ? 1 : 0;
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'lastShomuIndex', lastShomuIndex);
-        document.getElementById('undoBtn').style.display='none'; history=null;
+        document.getElementById('undoBtn').style.display = 'none';
     }
 
     function addFreeText() {
-        const val = document.getElementById('newText').value; if(!val) return;
-        const color = document.getElementById('textColor').value;
-        const size = document.getElementById('textSize').value;
-        const t = { id:'t'+Date.now(), text:val, color:color, size:size, left:'100px', top:'100px' };
-        texts.push(t); renderTexts(); document.getElementById('newText').value = '';
+        const val = escapeHTML(document.getElementById('newText').value);
+        if(!val) return;
+        const t = { id:'t'+Date.now(), text:val, left:'100px', top:'100px' };
+        texts.push(t); renderTexts();
+        document.getElementById('newText').value = '';
     }
 
     function renderTexts() {
         document.querySelectorAll('.free-text').forEach(e => e.remove());
         texts.forEach(t => {
-            const el = document.createElement('div'); el.className = 'free-text'; el.id = t.id;
-            el.style.cssText = `color:${t.color}; font-size:${t.size}; left:${t.left}; top:${t.top};`;
+            const el = document.createElement('div'); el.className = 'free-text';
+            el.style.left = t.left; el.style.top = t.top;
             el.innerHTML = `<span>${t.text}</span><span class="delete-text" onclick="deleteText('${t.id}')">×</span>`;
-            makeDraggable(el, (p) => { const target = texts.find(x => x.id === t.id); if(target) { target.left=p.left; target.top=p.top; } });
+            makeDraggable(el, (p) => { t.left=p.left; t.top=p.top; });
             document.getElementById('seatArea').appendChild(el);
         });
     }
 
     function deleteText(id) { texts = texts.filter(x => x.id !== id); renderTexts(); }
 
-    function saveAll() { 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'counts', JSON.stringify(counts)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'names', JSON.stringify(names)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'pos', JSON.stringify(pos)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'texts', JSON.stringify(texts)); 
-        localStorage.setItem(STORAGE_KEY_PREFIX + 'lastShomuIndex', lastShomuIndex);
-        alert('設定を保存しました。'); 
+    function saveAll() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({counts, names, pos, texts, lastShomuIndex}));
+        alert('ブラウザに保存しました。');
     }
 
-    function exportConfig() { 
-        const blob = new Blob([JSON.stringify({counts,names,pos,texts,lastShomuIndex})],{type:'application/json'}); 
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
-        a.download = `座席設定.json`; a.click(); 
+    function exportConfig() {
+        const blob = new Blob([JSON.stringify({counts,names,pos,texts,lastShomuIndex})],{type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `seat_config.json`; a.click();
     }
 
-    function importConfig(input) { 
-        const reader = new FileReader(); 
-        reader.onload = (e) => { 
-            try { 
-                const d = JSON.parse(e.target.result); 
-                counts=d.counts; names=d.names; pos=d.pos; texts=d.texts; 
-                lastShomuIndex=d.lastShomuIndex || 0;
-                saveAll(); location.reload(); 
-            } catch(err) { alert('読み込みに失敗しました。'); } 
-        }; 
-        reader.readAsText(input.files[0]); 
+    function importConfig(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const d = JSON.parse(e.target.result);
+                // インポート時にすべての名前をサニタイズ
+                for(let k in d.names) d.names[k] = escapeHTML(d.names[k]);
+                names = d.names; counts = d.counts; pos = d.pos; texts = d.texts; lastShomuIndex = d.lastShomuIndex;
+                saveAll(); location.reload();
+            } catch(err) { alert('読み込み失敗'); }
+        };
+        reader.readAsText(input.files[0]);
     }
 
-    function resetNames() { if(confirm('職員名をすべて消去しますか？')){ names={}; renderMaint(); syncSeats(); saveAll(); } }
-    function fullReset() { if(confirm('すべてを初期化しますか？')){ localStorage.clear(); location.reload(); } }
+    function resetNames() { if(confirm('名前をクリア？')){ names={}; renderMaint(); saveAll(); } }
+    function fullReset() { if(confirm('全てリセット？')){ localStorage.clear(); location.reload(); } }
 
     init();
 </script>
