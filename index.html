@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - 完全統合版</title>
+    <title>座席抽選システム - 機能完全復旧版</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +16,7 @@
             --color-gray-200: #dbdbdb;
             --color-gray-50: #f2f2f2;
             --color-white: #ffffff;
+            --color-error: #d43d35;
             --font-main: 'BIZ UDPGothic', sans-serif;
         }
 
@@ -44,7 +45,6 @@
             padding-bottom: 10px;
         }
 
-        /* 設定エリアのスタイル */
         #maintenanceArea {
             display: none;
             background: #fdfdfd;
@@ -78,7 +78,6 @@
             font-family: var(--font-main);
         }
 
-        /* 座席エリアのスタイル */
         .seat-area-wrapper {
             width: 100%;
             position: relative;
@@ -110,7 +109,6 @@
             z-index: 10;
             border-radius: 4px;
             box-sizing: border-box;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
         }
 
         .seat-label { font-size: 0.6rem; color: #666; margin-bottom: 2px; }
@@ -131,6 +129,21 @@
         }
         .btn-draw:active { transform: translateY(2px); box-shadow: 0 2px 0 #004a99; }
 
+        .btn-danger {
+            color: var(--color-error);
+            border-color: var(--color-error);
+            background-color: white;
+        }
+        .btn-danger:hover {
+            background-color: #fff5f5;
+        }
+
+        .maint-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         @media print {
             #maintenanceArea, .controls-main, #maintToggleBtn { display: none !important; }
             .container { box-shadow: none; max-width: 100%; }
@@ -149,20 +162,22 @@
         <div id="roleInputs"></div>
 
         <div class="role-group">
-            <p style="margin-top:0; font-weight:700;">データ管理</p>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button onclick="exportConfig()">JSON出力（配布用）</button>
+            <p style="margin-top:0; font-weight:700;">データ・レイアウト管理</p>
+            <div class="maint-actions">
+                <button onclick="exportConfig()">JSON出力（バックアップ）</button>
                 <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
                 <button onclick="document.getElementById('importFile').click()">JSON読込</button>
-                <button onclick="saveAll()" style="background:#0062cc; color:white; border:none;">ブラウザに保存</button>
-                <button onclick="resetNames()" style="color:red;">名前をクリア</button>
+                <button onclick="saveAll()" style="background:var(--color-blue-600); color:white; border:none;">ブラウザに保存</button>
+                
+                <button class="btn-danger" onclick="resetNames()">名前のみ消去</button>
+                <button class="btn-danger" onclick="fullReset()" style="background-color: #ffebeb;">座席配置を初期化（全リセット）</button>
             </div>
         </div>
     </div>
 
     <div class="controls-main">
         <button class="btn-draw" onclick="confirmAndDraw()">座席を抽選する</button>
-        <button id="undoBtn" style="display:none;" onclick="undoResult()">⤶ 戻す</button>
+        <button id="undoBtn" style="display:none;" onclick="undoResult()">⤶ 抽選を戻す</button>
     </div>
 
     <div class="seat-area-wrapper">
@@ -171,14 +186,13 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v14_final_all';
+    const STORAGE_KEY = 'seat_system_v15_proportional_all';
     let names = {};
     let pos = {};
     let lastShomuIndex = 1; 
     let history = null;
     const counts = { shomu: 2, general: 14 };
 
-    // セキュリティ対策：サニタイズ
     function escapeHTML(str) {
         if (!str) return '';
         return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -233,8 +247,11 @@
             const el = document.createElement('div');
             el.className = 'seat'; el.id = `box-${d.id}`;
             el.innerHTML = `<div class="seat-label">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
+            
+            // 保存された座標（%）があれば適用、なければデフォルト
             el.style.left = pos[d.id]?.left || (5 + (i % 5) * 18) + "%";
             el.style.top = pos[d.id]?.top || (5 + Math.floor(i / 5) * 20) + "%";
+            
             makeDraggable(el, d.id);
             area.appendChild(el);
         });
@@ -243,15 +260,15 @@
     function makeDraggable(el, id) {
         let isDragging = false;
         const area = document.getElementById('seatArea');
-        const start = () => { isDragging = true; };
+        const start = (e) => { isDragging = true; };
         const move = (e) => {
             if (!isDragging) return;
             const rect = area.getBoundingClientRect();
             const c = e.type.includes('touch') ? e.touches[0] : e;
             let xP = ((c.clientX - rect.left) / rect.width) * 100;
             let yP = ((c.clientY - rect.top) / rect.height) * 100;
-            xP = Math.max(0, Math.min(xP - 6, 87.5)); 
-            yP = Math.max(0, Math.min(yP - 6, 87.5));
+            xP = Math.max(0, Math.min(xP - 6.25, 87.5)); 
+            yP = Math.max(0, Math.min(yP - 6.25, 87.5));
             el.style.left = xP + "%"; el.style.top = yP + "%";
             pos[id] = { left: el.style.left, top: el.style.top };
         };
@@ -297,7 +314,7 @@
 
     function saveAll() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex}));
-        alert("保存しました。");
+        alert("ブラウザに現在の状態（名前と配置）を保存しました。");
     }
 
     function exportConfig() {
@@ -305,7 +322,7 @@
         const blob = new Blob([data], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = "seat_layout_final.json";
+        a.download = "seat_layout.json";
         a.click();
     }
 
@@ -314,15 +331,27 @@
         reader.onload = (e) => {
             try {
                 const d = JSON.parse(e.target.result);
-                pos = d.pos; names = d.names; lastShomuIndex = d.lastShomuIndex;
+                pos = d.pos || {}; names = d.names || {}; lastShomuIndex = d.lastShomuIndex || 0;
                 saveAll(); location.reload();
-            } catch(err) { alert('読み込み失敗'); }
+            } catch(err) { alert('読み込みに失敗しました。'); }
         };
         reader.readAsText(input.files[0]);
     }
 
-    function resetNames() { if(confirm('名前をクリアしますか？')) { names = {}; renderMaint(); saveAll(); } }
-    function fullReset() { if(confirm('全てリセットしますか？')) { localStorage.clear(); location.reload(); } }
+    function resetNames() {
+        if(confirm('登録されている職員名をすべて消去しますか？')) {
+            names = {};
+            renderMaint();
+            saveAll();
+        }
+    }
+
+    function fullReset() {
+        if(confirm('注意：座席レイアウトの配置と名前をすべて初期状態に戻します。よろしいですか？')) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
 
     init();
 </script>
