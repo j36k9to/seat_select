@@ -11,7 +11,6 @@
 
     <style>
         :root {
-            /* デジタル庁カラーパレット */
             --color-primary: #0055aa;
             --color-primary-dark: #004488;
             --color-text: #1a1a1a;
@@ -24,6 +23,7 @@
             --space-8: 8px;
             --space-16: 16px;
             --space-24: 24px;
+            --space-32: 32px;
             --space-48: 48px;
         }
 
@@ -57,7 +57,6 @@
             margin: 0;
         }
 
-        /* フォーム要素 */
         section {
             background-color: var(--color-bg-sub);
             padding: var(--space-24);
@@ -95,7 +94,7 @@
             outline-offset: 0;
         }
 
-        /* ボタンデザイン */
+        /* --- ボタンデザイン修正箇所 --- */
         button {
             font-family: var(--font-main);
             font-weight: 700;
@@ -105,6 +104,15 @@
             cursor: pointer;
             border: 2px solid transparent;
             transition: background-color 0.2s;
+            
+            /* 中央揃えを徹底 */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            text-align: center;
+            min-height: 48px; /* アクセシビリティ確保のための最小高さ */
+            box-sizing: border-box;
         }
 
         .btn-primary {
@@ -127,10 +135,17 @@
             color: var(--color-error);
         }
 
-        /* レイアウトエリア */
+        /* 抽選ボタン専用のサイズ調整 */
+        .btn-draw {
+            font-size: 1.5rem;
+            padding: 24px 60px;
+        }
+
         .controls-main {
             display: flex;
             justify-content: center;
+            align-items: center; /* 横並び時の高さを揃える */
+            gap: var(--space-16);
             margin: var(--space-48) 0;
         }
 
@@ -193,8 +208,8 @@
     </div>
 
     <div class="controls-main">
-        <button class="btn-primary" style="font-size: 1.5rem; padding: 20px 60px;" onclick="confirmAndDraw()">座席を抽選する</button>
-        <button id="undoBtn" class="btn-secondary" style="display:none; margin-left: 16px;" onclick="undoResult()">抽選を戻す</button>
+        <button class="btn-primary btn-draw" onclick="confirmAndDraw()">座席を抽選する</button>
+        <button id="undoBtn" class="btn-secondary" style="display:none;" onclick="undoResult()">抽選を戻す</button>
     </div>
 
     <div class="seat-area-wrapper">
@@ -203,7 +218,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_gov_v1';
+    const STORAGE_KEY = 'seat_system_gov_v2';
     let names = {}; let pos = {}; let lastShomuIndex = 1; let history = null;
     const counts = { shomu: 2, general: 14 };
 
