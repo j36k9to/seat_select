@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - ユニバーサル・レイアウト版</title>
+    <title>座席抽選システム - UI改善版</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,16 +30,28 @@
             margin: 0 auto;
             background: var(--color-white);
             padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--color-blue-600);
+            padding-bottom: 10px;
         }
 
         /* 座席エリアの縦横比を固定 (16:9) */
         .seat-area-wrapper {
             width: 100%;
             position: relative;
-            padding-top: 56.25%; /* 16:9 の比率 */
+            padding-top: 56.25%; 
             background: #fff;
             border: 2px solid var(--color-gray-900);
             overflow: hidden;
+            border-radius: 4px;
         }
 
         .seat-area {
@@ -49,11 +61,10 @@
             background-size: 20px 20px;
         }
 
-        /* 座席サイズも%で指定することで伸縮に対応 */
         .seat {
             position: absolute;
-            width: 12%;  /* 全体の幅に対して */
-            height: 12%; /* 全体の高さに対して */
+            width: 12%;  
+            height: 12%; 
             border: 2px solid var(--color-gray-900);
             background: white;
             display: flex;
@@ -64,45 +75,90 @@
             z-index: 10;
             border-radius: 4px;
             box-sizing: border-box;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
         }
 
         .seat-name {
-            font-size: 1.2vw; /* 画面幅に応じて文字サイズも変化 */
+            font-size: 1.2vw;
             font-weight: 700;
         }
 
         @media (max-width: 600px) {
-            .seat-name { font-size: 3vw; } /* スマホでは少し大きく */
+            .seat-name { font-size: 3vw; }
         }
 
-        .controls-main { text-align: center; margin: 20px 0; }
-        #maintenanceArea { display: none; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; }
-        
-        /* 印刷設定 */
+        /* ボタン中央寄せの設定 */
+        .controls-main {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0;
+        }
+
+        button {
+            font-family: var(--font-main);
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            padding: 8px 16px;
+            transition: all 0.2s;
+        }
+
+        .btn-draw {
+            padding: 15px 50px;
+            font-size: 1.4rem;
+            background-color: var(--color-blue-600);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 0 #004a99;
+        }
+
+        .btn-draw:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #004a99;
+        }
+
+        #maintenanceArea {
+            display: none;
+            background: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .maint-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         @media print {
-            #maintenanceArea, .controls-main { display: none !important; }
-            body { padding: 0; }
-            .container { max-width: 100%; box-shadow: none; }
+            #maintenanceArea, .controls-main, .header-bar button { display: none !important; }
+            .container { box-shadow: none; max-width: 100%; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h1 style="font-size: 1.2rem;">座席抽選システム (固定比率版)</h1>
-        <button onclick="toggleMaintenance()" style="padding:5px 10px;">設定</button>
+    <div class="header-bar">
+        <h1 style="font-size: 1.4rem; margin:0;">座席抽選システム</h1>
+        <button id="maintToggleBtn" onclick="toggleMaintenance()">🛠 設定を開く</button>
     </div>
 
     <div id="maintenanceArea">
-        <button onclick="exportConfig()">JSON出力（このレイアウトを配布）</button>
-        <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
-        <button onclick="document.getElementById('importFile').click()">JSON読込</button>
-        <button onclick="saveAll()" style="background:#0062cc; color:white;">ブラウザ保存</button>
+        <p style="margin-top:0; font-weight:700;">レイアウト管理</p>
+        <div class="maint-actions">
+            <button onclick="exportConfig()">JSON出力（配布用）</button>
+            <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
+            <button onclick="document.getElementById('importFile').click()">JSON読込</button>
+            <button onclick="saveAll()" style="background:#0062cc; color:white; border:none;">ブラウザに保存</button>
+        </div>
     </div>
 
     <div class="controls-main">
-        <button onclick="draw()" style="padding:15px 30px; font-size:1.2rem; cursor:pointer;">抽選実行</button>
+        <button class="btn-draw" onclick="draw()">座席を抽選する</button>
     </div>
 
     <div class="seat-area-wrapper">
@@ -111,10 +167,10 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v12_proportional';
+    const STORAGE_KEY = 'seat_system_v13_final';
     let names = {};
-    let pos = {}; // ここに % で座標を保存する
-    let counts = { shomu: 2, general: 14 };
+    let pos = {}; 
+    let lastShomuIndex = 1;
 
     function init() {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -122,8 +178,24 @@
             const d = JSON.parse(saved);
             pos = d.pos || {};
             names = d.names || {};
+            lastShomuIndex = d.lastShomuIndex ?? 1;
         }
         syncSeats();
+    }
+
+    // 設定エリアの開閉とボタン文言の切り替え
+    function toggleMaintenance() {
+        const area = document.getElementById('maintenanceArea');
+        const btn = document.getElementById('maintToggleBtn');
+        const isHidden = area.style.display === 'none' || area.style.display === '';
+
+        if (isHidden) {
+            area.style.display = 'block';
+            btn.innerText = '✖ 設定を閉じる';
+        } else {
+            area.style.display = 'none';
+            btn.innerText = '🛠 設定を開く';
+        }
     }
 
     function syncSeats() {
@@ -137,9 +209,8 @@
             const el = document.createElement('div');
             el.className = 'seat';
             el.id = `box-${d.id}`;
-            el.innerHTML = `<div style="font-size:0.6rem;">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
+            el.innerHTML = `<div style="font-size:0.6rem; color:#666;">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
             
-            // 保存された % 座標を適用。なければ初期値を計算
             const left = pos[d.id]?.left || (5 + (i % 6) * 15) + "%";
             const top = pos[d.id]?.top || (5 + Math.floor(i / 6) * 20) + "%";
             
@@ -155,18 +226,20 @@
         let isDragging = false;
         const area = document.getElementById('seatArea');
 
-        const start = (e) => { isDragging = true; };
+        const start = (e) => { 
+            if(e.type === 'mousedown') e.preventDefault();
+            isDragging = true; 
+        };
         const move = (e) => {
             if (!isDragging) return;
             const rect = area.getBoundingClientRect();
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             
-            // マウス位置を親要素に対する % に変換
             let xP = ((clientX - rect.left) / rect.width) * 100;
             let yP = ((clientY - rect.top) / rect.height) * 100;
 
-            // 枠外に出ないよう制限
+            // 座席サイズの半分(約6%)を引いて中心を合わせる
             xP = Math.max(0, Math.min(xP - 6, 88)); 
             yP = Math.max(0, Math.min(yP - 6, 88));
 
@@ -177,43 +250,44 @@
         const end = () => { isDragging = false; };
 
         el.onmousedown = el.ontouchstart = start;
-        document.onmousemove = document.ontouchmove = move;
-        document.onmouseup = document.ontouchend = end;
+        document.addEventListener('mousemove', move);
+        document.addEventListener('touchmove', move, {passive: false});
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchend', end);
     }
 
     function draw() {
-        // (省略していた抽選ロジックをここに実装)
-        const combined = Array.from({length:16}, (_,i) => `職員${i+1}`).sort(()=>Math.random()-0.5);
+        if(!confirm('抽選を実行しますか？')) return;
+        
+        // 簡易抽選ロジック（実際の名簿連動が必要な場合は以前のロジックを統合）
+        const mockNames = Array.from({length:16}, (_,i) => `職員${i+1}`).sort(()=>Math.random()-0.5);
         document.querySelectorAll('.seat-name').forEach((el, i) => {
-            el.innerText = combined[i];
+            el.innerText = mockNames[i];
         });
     }
 
-    function toggleMaintenance() {
-        const m = document.getElementById('maintenanceArea');
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
-    }
-
     function saveAll() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names}));
-        alert("レイアウトを保存しました");
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex}));
+        alert("現在のレイアウトをブラウザに保存しました。");
     }
 
     function exportConfig() {
-        const data = JSON.stringify({pos, names});
+        const data = JSON.stringify({pos, names, lastShomuIndex});
         const blob = new Blob([data], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = "seat_layout_proportional.json";
+        a.download = "seat_layout.json";
         a.click();
     }
 
     function importConfig(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const d = JSON.parse(e.target.result);
-            pos = d.pos; names = d.names;
-            saveAll(); location.reload();
+            try {
+                const d = JSON.parse(e.target.result);
+                pos = d.pos; names = d.names; lastShomuIndex = d.lastShomuIndex;
+                saveAll(); location.reload();
+            } catch(err) { alert('ファイルの読み込みに失敗しました。'); }
         };
         reader.readAsText(input.files[0]);
     }
