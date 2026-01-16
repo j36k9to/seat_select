@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>座席抽選システム | デジタル庁デザインシステム準拠</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,100 +11,123 @@
 
     <style>
         :root {
-            --color-primary: #0055aa;
-            --color-primary-dark: #004488;
-            --color-text: #1a1a1a;
-            --color-text-secondary: #4d4d4d;
-            --color-bg-sub: #f2f2f2;
-            --color-border: #212121;
-            --color-error: #d43d35;
-            --color-focus: #ffdd00;
-            --font-main: 'BIZ UDPGothic', sans-serif;
-            --space-8: 8px;
-            --space-16: 16px;
-            --space-24: 24px;
+            /* デジタル庁デザインシステム 定義カラー */
+            --color-blue-600: #0055aa;
+            --color-blue-700: #004488;
+            --color-text-main: #1a1a1a;
+            --color-text-sub: #4d4d4d;
+            --color-bg-gray: #f2f2f2;
+            --color-border-main: #212121;
+            --color-error-main: #d43d35;
+            --color-focus-yellow: #ffdd00;
+            --font-family: 'BIZ UDPGothic', sans-serif;
+            /* 8pxグリッドシステム */
+            --s-8: 8px; --s-16: 16px; --s-24: 24px; --s-32: 32px; --s-48: 48px;
         }
 
         body {
-            font-family: var(--font-main);
+            font-family: var(--font-family);
             background-color: #ffffff;
-            color: var(--color-text);
+            color: var(--color-text-main);
             margin: 0; padding: 0;
             line-height: 1.7;
             overflow-x: hidden;
         }
 
-        .container { max-width: 1040px; margin: 0 auto; padding: var(--space-24); }
+        .container { max-width: 1040px; margin: 0 auto; padding: var(--s-24); }
 
         header {
-            border-bottom: 4px solid var(--color-primary);
-            margin-bottom: 32px;
-            padding-bottom: var(--space-8);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 4px solid var(--color-blue-600);
+            margin-bottom: var(--s-48);
+            padding-bottom: var(--s-8);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        section { background-color: var(--color-bg-sub); padding: var(--space-24); margin-bottom: 32px; }
+        h1 { font-size: 2rem; font-weight: 700; margin: 0; }
+
+        section { background-color: var(--color-bg-gray); padding: var(--s-24); margin-bottom: var(--s-32); }
 
         .role-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: var(--space-16);
-            border-left: 4px solid var(--color-primary);
-            padding-left: var(--space-8);
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: var(--s-16); border-left: 4px solid var(--color-blue-600);
+            padding-left: var(--s-8);
         }
 
         .role-header h2 { font-size: 1.25rem; margin: 0; }
 
         .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: var(--space-16);
-            margin-bottom: var(--space-24);
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--s-16); margin-bottom: var(--s-24);
         }
 
         input[type="text"] {
             font-size: 1rem; padding: 8px 12px;
-            border: 2px solid var(--color-border);
+            border: 2px solid var(--color-border-main);
             border-radius: 2px; width: 100%; box-sizing: border-box;
         }
 
+        input[type="text"]:focus { outline: 4px solid var(--color-focus-yellow); outline-offset: 0; }
+
+        /* --- デジタル庁DS ボタン定義 --- */
         button {
-            font-family: var(--font-main); font-weight: 700;
+            font-family: var(--font-family); font-weight: 700; font-size: 1rem;
             cursor: pointer; border-radius: 2px; border: 2px solid transparent;
             display: inline-flex; align-items: center; justify-content: center;
-            min-height: 44px; padding: 8px 16px; box-sizing: border-box;
+            min-height: 48px; padding: 8px 24px; box-sizing: border-box;
+            transition: background-color 0.2s;
         }
 
-        .btn-primary { background-color: var(--color-primary); color: #ffffff; }
-        .btn-secondary { background-color: #ffffff; border-color: var(--color-border); color: var(--color-text); }
-        .btn-danger { background-color: #ffffff; border-color: var(--color-error); color: var(--color-error); }
+        button:focus { outline: 4px solid var(--color-focus-yellow); outline-offset: 0; }
 
-        .btn-count { min-height: 32px; padding: 0 12px; margin-left: var(--space-8); font-size: 1.2rem; }
+        .btn-primary { background-color: var(--color-blue-600); color: #ffffff; }
+        .btn-primary:hover { background-color: var(--color-blue-700); }
 
-        .controls-main { display: flex; justify-content: center; gap: var(--space-16); margin: 32px 0; }
+        .btn-secondary { background-color: #ffffff; border-color: var(--color-border-main); color: var(--color-text-main); }
+        .btn-secondary:hover { background-color: #e6e6e6; }
 
+        .btn-danger { background-color: #ffffff; border-color: var(--color-error-main); color: var(--color-error-main); }
+        .btn-danger:hover { background-color: #fcecea; }
+
+        .btn-count { min-height: 40px; min-width: 40px; padding: 0; margin-left: var(--s-8); font-size: 1.25rem; }
+
+        .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-48) 0; }
+
+        /* 座席レイアウトエリア */
         .seat-area-wrapper {
             width: 100%; position: relative; padding-top: 56.25%;
-            background: #ffffff; border: 4px solid var(--color-border);
-            touch-action: none; user-select: none;
+            background: #ffffff; border: 4px solid var(--color-border-main);
+            touch-action: none; user-select: none; box-sizing: border-box;
         }
 
         .seat {
             position: absolute; width: 12%; height: 12%;
-            border: 2px solid var(--color-border); background: #ffffff;
+            border: 2px solid var(--color-border-main); background: #ffffff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: move; z-index: 10; touch-action: none;
         }
 
-        .seat-label { font-size: 0.7rem; color: var(--color-text-secondary); pointer-events: none; }
-        .seat-name { font-size: 1.1vw; font-weight: 700; pointer-events: none; }
+        .seat-label { font-size: 0.75rem; color: var(--color-text-sub); pointer-events: none; margin-bottom: 2px; }
+        
+        /* フォントサイズを固定値（px）に変更 */
+        .seat-name { 
+            font-size: 14px; /* PC/iPadでの可読性を確保 */
+            font-weight: 700; 
+            pointer-events: none; 
+            text-align: center;
+            word-break: break-all;
+            padding: 0 4px;
+        }
+
+        @media (max-width: 600px) {
+            .seat-name { font-size: 12px; } /* スマホでも視認可能な最小限に固定 */
+            h1 { font-size: 1.5rem; }
+        }
 
         #maintenanceArea { display: none; }
 
-        @media (max-width: 600px) { .seat-name { font-size: 3vw; } }
+        @media print {
+            header, section, .controls-main, #maintToggleBtn { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -119,16 +142,16 @@
         <section>
             <div id="roleInputs"></div>
             
-            <div class="role-group" style="margin-top: 32px;">
-                <h2 style="font-size: 1.25rem; border-left: 4px solid var(--color-primary); padding-left: 8px; margin-bottom: 16px;">システム管理</h2>
-                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div class="role-group" style="margin-top: var(--s-32);">
+                <h2 style="font-size: 1.25rem; border-left: 4px solid var(--color-blue-600); padding-left: var(--s-8); margin-bottom: var(--s-16);">システム管理</h2>
+                <div style="display:flex; gap:var(--s-16); flex-wrap:wrap;">
                     <button class="btn-secondary" onclick="exportConfig()">JSON出力</button>
                     <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
                     <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
-                    <button class="btn-primary" onclick="saveAll()">現在の構成を保存</button>
+                    <button class="btn-primary" onclick="saveAll()">構成を保存</button>
                     
-                    <button class="btn-danger" onclick="resetNames()">職員登録のみ初期化</button>
-                    <button class="btn-danger" style="background:#fff5f5;" onclick="resetLayout()">座席レイアウトのみ初期化</button>
+                    <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
+                    <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
                 </div>
             </div>
         </section>
@@ -145,11 +168,8 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v20_gov';
-    let names = {}; 
-    let pos = {}; 
-    let lastShomuIndex = 1; 
-    let history = null;
+    const STORAGE_KEY = 'seat_system_gov_vFinal';
+    let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
     let counts = { shomu: 2, general: 14 };
 
     function init() {
@@ -157,7 +177,7 @@
         if (saved) {
             const d = JSON.parse(saved);
             pos = d.pos || {}; names = d.names || {}; 
-            lastShomuIndex = d.lastShomuIndex ?? 1;
+            lastShomuIndex = d.lastShomuIndex ?? 0;
             counts = d.counts || { shomu: 2, general: 14 };
         }
         renderMaint();
@@ -182,7 +202,6 @@
         const container = document.getElementById('roleInputs');
         container.innerHTML = '';
         const roles = [{k:'shomu', l:'庶務担当'}, {k:'general', l:'一般職員'}];
-        
         roles.forEach(role => {
             const n = counts[role.k];
             let items = '';
@@ -195,8 +214,8 @@
                     <div class="role-header">
                         <h2>${role.l}（${n}名）</h2>
                         <div>
-                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', 1)">＋</button>
-                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', -1)">－</button>
+                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', 1)" aria-label="増やす">＋</button>
+                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', -1)" aria-label="減らす">－</button>
                         </div>
                     </div>
                     <div class="input-grid">${items}</div>
@@ -207,15 +226,9 @@
     function syncSeats() {
         const area = document.getElementById('seatArea');
         area.innerHTML = '';
-        
-        // 庶務専用席は1つ（交代制用）
-        const list = [{id:'shomu-special', label:'庶務専用席'}];
-        // 必要な一般席の数（庶務の余りと一般職員の合計）
-        const totalGeneralSeats = (counts.shomu - 1) + counts.general;
-        
-        for(let i=1; i<=totalGeneralSeats; i++) {
-            list.push({id:`general-${i}`, label:`座席 ${i}`});
-        }
+        const list = [{id:'shomu-special', label:'庶務専用'}];
+        const totalGen = (counts.shomu - 1) + counts.general;
+        for(let i=1; i<=totalGen; i++) list.push({id:`general-${i}`, label:`一般 ${i}`});
 
         list.forEach((d, i) => {
             const el = document.createElement('div');
@@ -230,11 +243,10 @@
 
     function makeDraggable(el, id) {
         let isDragging = false;
-        const area = document.getElementById('seatArea');
         const move = (e) => {
             if (!isDragging) return;
             if (e.cancelable) e.preventDefault();
-            const rect = area.getBoundingClientRect();
+            const rect = document.getElementById('seatArea').getBoundingClientRect();
             const c = e.type.includes('touch') ? e.touches[0] : e;
             let xP = ((c.clientX - rect.left) / rect.width) * 100 - 6;
             let yP = ((c.clientY - rect.top) / rect.height) * 100 - 6;
@@ -250,17 +262,16 @@
     }
 
     function confirmAndDraw() {
-        if(!confirm('座席の抽選を開始します。')) return;
+        if(!confirm('座席の抽選を開始します。よろしいですか？')) return;
         history = {};
         document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
         
-        // 庶務交代ロジック
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
         
-        const specIdx = (lastShomuIndex >= shomuNames.length) ? 0 : lastShomuIndex;
+        const specIdx = lastShomuIndex % shomuNames.length;
         const specName = shomuNames[specIdx];
-        lastShomuIndex = (specIdx + 1) % shomuNames.length;
+        lastShomuIndex = (specIdx + 1);
 
         const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
         const generalNames = [];
@@ -276,27 +287,14 @@
         document.getElementById('undoBtn').style.display = 'inline-flex';
     }
 
-    function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex, counts})); alert("保存しました。"); }
-    
-    function resetNames() {
-        if(confirm('職員の登録名のみをすべて消去しますか？')) {
-            names = {}; renderMaint(); saveAll();
-        }
-    }
-
-    function resetLayout() {
-        if(confirm('座席の位置レイアウトのみを初期状態に戻しますか？')) {
-            pos = {}; syncSeats(); saveAll();
-        }
-    }
-
+    function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex, counts})); alert("設定を保存しました。"); }
+    function resetNames() { if(confirm('登録名のみをリセットしますか？')) { names = {}; renderMaint(); saveAll(); } }
+    function resetLayout() { if(confirm('座席配置をリセットしますか？')) { pos = {}; syncSeats(); saveAll(); } }
     function exportConfig() {
-        const data = JSON.stringify({pos, names, lastShomuIndex, counts});
-        const blob = new Blob([data], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify({pos, names, lastShomuIndex, counts})], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = "seat_config.json"; a.click();
     }
-
     function importConfig(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -306,7 +304,6 @@
         };
         reader.readAsText(input.files[0]);
     }
-
     function undoResult() { if(!history) return; for(let id in history) document.getElementById(id).innerText = history[id]; document.getElementById('undoBtn').style.display='none'; }
 
     init();
