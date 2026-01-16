@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>座席抽選システム - UI改善版</title>
+    <title>座席抽選システム - 完全統合版</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,8 @@
         body {
             font-family: var(--font-main);
             background-color: var(--color-gray-50);
-            margin: 0; padding: 10px;
+            margin: 0; padding: clamp(10px, 3vw, 20px);
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
@@ -43,15 +44,50 @@
             padding-bottom: 10px;
         }
 
-        /* 座席エリアの縦横比を固定 (16:9) */
+        /* 設定エリアのスタイル */
+        #maintenanceArea {
+            display: none;
+            background: #fdfdfd;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .role-group {
+            background: white;
+            padding: 15px;
+            border: 1px solid #eee;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        /* 座席エリアのスタイル */
         .seat-area-wrapper {
             width: 100%;
             position: relative;
-            padding-top: 56.25%; 
+            padding-top: 56.25%; /* 16:9 */
             background: #fff;
             border: 2px solid var(--color-gray-900);
-            overflow: hidden;
             border-radius: 4px;
+            overflow: hidden;
+            touch-action: none;
         }
 
         .seat-area {
@@ -63,8 +99,7 @@
 
         .seat {
             position: absolute;
-            width: 12%;  
-            height: 12%; 
+            width: 12.5%; height: 12.5%;
             border: 2px solid var(--color-gray-900);
             background: white;
             display: flex;
@@ -75,66 +110,29 @@
             z-index: 10;
             border-radius: 4px;
             box-sizing: border-box;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
         }
 
-        .seat-name {
-            font-size: 1.2vw;
-            font-weight: 700;
-        }
+        .seat-label { font-size: 0.6rem; color: #666; margin-bottom: 2px; }
+        .seat-name { font-size: 1.2vw; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; text-align: center; }
 
-        @media (max-width: 600px) {
-            .seat-name { font-size: 3vw; }
-        }
+        @media (max-width: 600px) { .seat-name { font-size: 3vw; } }
 
-        /* ボタン中央寄せの設定 */
-        .controls-main {
-            display: flex;
-            justify-content: center;
-            margin: 25px 0;
-        }
-
+        .controls-main { display: flex; justify-content: center; gap: 10px; margin: 25px 0; }
+        
         button {
-            font-family: var(--font-main);
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            padding: 8px 16px;
-            transition: all 0.2s;
+            font-family: var(--font-main); font-weight: 700; cursor: pointer;
+            border-radius: 6px; border: 1px solid #ccc; padding: 8px 16px;
         }
 
         .btn-draw {
-            padding: 15px 50px;
-            font-size: 1.4rem;
-            background-color: var(--color-blue-600);
-            color: white;
-            border: none;
+            padding: 15px 40px; font-size: 1.3rem; background: var(--color-blue-600); color: white; border: none;
             box-shadow: 0 4px 0 #004a99;
         }
-
-        .btn-draw:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #004a99;
-        }
-
-        #maintenanceArea {
-            display: none;
-            background: #f9f9f9;
-            padding: 20px;
-            border: 1px solid #ddd;
-            margin-bottom: 20px;
-            border-radius: 6px;
-        }
-
-        .maint-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .btn-draw:active { transform: translateY(2px); box-shadow: 0 2px 0 #004a99; }
 
         @media print {
-            #maintenanceArea, .controls-main, .header-bar button { display: none !important; }
+            #maintenanceArea, .controls-main, #maintToggleBtn { display: none !important; }
             .container { box-shadow: none; max-width: 100%; }
         }
     </style>
@@ -143,22 +141,28 @@
 
 <div class="container">
     <div class="header-bar">
-        <h1 style="font-size: 1.4rem; margin:0;">座席抽選システム</h1>
+        <h1 style="font-size: 1.3rem; margin:0;">座席抽選システム</h1>
         <button id="maintToggleBtn" onclick="toggleMaintenance()">🛠 設定を開く</button>
     </div>
 
     <div id="maintenanceArea">
-        <p style="margin-top:0; font-weight:700;">レイアウト管理</p>
-        <div class="maint-actions">
-            <button onclick="exportConfig()">JSON出力（配布用）</button>
-            <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
-            <button onclick="document.getElementById('importFile').click()">JSON読込</button>
-            <button onclick="saveAll()" style="background:#0062cc; color:white; border:none;">ブラウザに保存</button>
+        <div id="roleInputs"></div>
+
+        <div class="role-group">
+            <p style="margin-top:0; font-weight:700;">データ管理</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button onclick="exportConfig()">JSON出力（配布用）</button>
+                <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
+                <button onclick="document.getElementById('importFile').click()">JSON読込</button>
+                <button onclick="saveAll()" style="background:#0062cc; color:white; border:none;">ブラウザに保存</button>
+                <button onclick="resetNames()" style="color:red;">名前をクリア</button>
+            </div>
         </div>
     </div>
 
     <div class="controls-main">
-        <button class="btn-draw" onclick="draw()">座席を抽選する</button>
+        <button class="btn-draw" onclick="confirmAndDraw()">座席を抽選する</button>
+        <button id="undoBtn" style="display:none;" onclick="undoResult()">⤶ 戻す</button>
     </div>
 
     <div class="seat-area-wrapper">
@@ -167,10 +171,18 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v13_final';
+    const STORAGE_KEY = 'seat_system_v14_final_all';
     let names = {};
-    let pos = {}; 
-    let lastShomuIndex = 1;
+    let pos = {};
+    let lastShomuIndex = 1; 
+    let history = null;
+    const counts = { shomu: 2, general: 14 };
+
+    // セキュリティ対策：サニタイズ
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
 
     function init() {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -180,43 +192,49 @@
             names = d.names || {};
             lastShomuIndex = d.lastShomuIndex ?? 1;
         }
+        renderMaint();
         syncSeats();
     }
 
-    // 設定エリアの開閉とボタン文言の切り替え
     function toggleMaintenance() {
         const area = document.getElementById('maintenanceArea');
         const btn = document.getElementById('maintToggleBtn');
         const isHidden = area.style.display === 'none' || area.style.display === '';
-
-        if (isHidden) {
-            area.style.display = 'block';
-            btn.innerText = '✖ 設定を閉じる';
-        } else {
-            area.style.display = 'none';
-            btn.innerText = '🛠 設定を開く';
-        }
+        area.style.display = isHidden ? 'block' : 'none';
+        btn.innerText = isHidden ? '✖ 設定を閉じる' : '🛠 設定を開く';
     }
+
+    function renderMaint() {
+        const container = document.getElementById('roleInputs');
+        container.innerHTML = '';
+        const roles = [{k:'shomu', l:'庶務担当'}, {k:'general', l:'一般職員'}];
+        
+        roles.forEach(role => {
+            let items = '';
+            const n = role.k === 'shomu' ? counts.shomu : counts.general;
+            for(let i=1; i<=n; i++) {
+                const id = `${role.k}-${i}`;
+                const val = escapeHTML(names[id] || '');
+                items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${val}" onchange="updateName('${id}', this.value)"></div>`;
+            }
+            container.innerHTML += `<div class="role-group"><strong>${role.l} (${n}名)</strong><div class="input-grid">${items}</div></div>`;
+        });
+    }
+
+    function updateName(id, val) { names[id] = escapeHTML(val); }
 
     function syncSeats() {
         const area = document.getElementById('seatArea');
         area.innerHTML = '';
-        
-        const list = [{id:'shomu-special', label:'庶務'}];
+        const list = [{id:'shomu-special', label:'庶務席'}];
         for(let i=1; i<=15; i++) list.push({id:`general-${i}`, label:''});
 
         list.forEach((d, i) => {
             const el = document.createElement('div');
-            el.className = 'seat';
-            el.id = `box-${d.id}`;
-            el.innerHTML = `<div style="font-size:0.6rem; color:#666;">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
-            
-            const left = pos[d.id]?.left || (5 + (i % 6) * 15) + "%";
-            const top = pos[d.id]?.top || (5 + Math.floor(i / 6) * 20) + "%";
-            
-            el.style.left = left;
-            el.style.top = top;
-            
+            el.className = 'seat'; el.id = `box-${d.id}`;
+            el.innerHTML = `<div class="seat-label">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
+            el.style.left = pos[d.id]?.left || (5 + (i % 5) * 18) + "%";
+            el.style.top = pos[d.id]?.top || (5 + Math.floor(i / 5) * 20) + "%";
             makeDraggable(el, d.id);
             area.appendChild(el);
         });
@@ -225,30 +243,19 @@
     function makeDraggable(el, id) {
         let isDragging = false;
         const area = document.getElementById('seatArea');
-
-        const start = (e) => { 
-            if(e.type === 'mousedown') e.preventDefault();
-            isDragging = true; 
-        };
+        const start = () => { isDragging = true; };
         const move = (e) => {
             if (!isDragging) return;
             const rect = area.getBoundingClientRect();
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            
-            let xP = ((clientX - rect.left) / rect.width) * 100;
-            let yP = ((clientY - rect.top) / rect.height) * 100;
-
-            // 座席サイズの半分(約6%)を引いて中心を合わせる
-            xP = Math.max(0, Math.min(xP - 6, 88)); 
-            yP = Math.max(0, Math.min(yP - 6, 88));
-
-            el.style.left = xP + "%";
-            el.style.top = yP + "%";
-            pos[id] = { left: xP + "%", top: yP + "%" };
+            const c = e.type.includes('touch') ? e.touches[0] : e;
+            let xP = ((c.clientX - rect.left) / rect.width) * 100;
+            let yP = ((c.clientY - rect.top) / rect.height) * 100;
+            xP = Math.max(0, Math.min(xP - 6, 87.5)); 
+            yP = Math.max(0, Math.min(yP - 6, 87.5));
+            el.style.left = xP + "%"; el.style.top = yP + "%";
+            pos[id] = { left: el.style.left, top: el.style.top };
         };
         const end = () => { isDragging = false; };
-
         el.onmousedown = el.ontouchstart = start;
         document.addEventListener('mousemove', move);
         document.addEventListener('touchmove', move, {passive: false});
@@ -256,19 +263,41 @@
         document.addEventListener('touchend', end);
     }
 
+    function confirmAndDraw() {
+        if(!confirm('座席を抽選します。よろしいですか？')) return;
+        history = {};
+        document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
+        draw();
+        document.getElementById('undoBtn').style.display = 'inline-flex';
+    }
+
     function draw() {
-        if(!confirm('抽選を実行しますか？')) return;
-        
-        // 簡易抽選ロジック（実際の名簿連動が必要な場合は以前のロジックを統合）
-        const mockNames = Array.from({length:16}, (_,i) => `職員${i+1}`).sort(()=>Math.random()-0.5);
-        document.querySelectorAll('.seat-name').forEach((el, i) => {
-            el.innerText = mockNames[i];
+        const shomuNames = [names['shomu-1'] || '庶務1', names['shomu-2'] || '庶務2'];
+        const currentIdx = (lastShomuIndex === 0) ? 1 : 0;
+        const specName = shomuNames[currentIdx];
+        const subShomu = shomuNames[currentIdx === 0 ? 1 : 0];
+        lastShomuIndex = currentIdx;
+
+        const generalNames = Array.from({length:counts.general}, (_,i) => names[`general-${i+1}`] || `職員${i+1}`);
+        const combined = [subShomu, ...generalNames].sort(()=>Math.random()-0.5);
+
+        document.getElementById('name-shomu-special').innerText = specName;
+        combined.forEach((n,i) => {
+            const e = document.getElementById(`name-general-${i+1}`);
+            if(e) e.innerText = n;
         });
+    }
+
+    function undoResult() {
+        if(!history) return;
+        for(let id in history) document.getElementById(id).innerText = history[id];
+        lastShomuIndex = (lastShomuIndex === 0) ? 1 : 0;
+        document.getElementById('undoBtn').style.display = 'none';
     }
 
     function saveAll() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex}));
-        alert("現在のレイアウトをブラウザに保存しました。");
+        alert("保存しました。");
     }
 
     function exportConfig() {
@@ -276,7 +305,7 @@
         const blob = new Blob([data], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = "seat_layout.json";
+        a.download = "seat_layout_final.json";
         a.click();
     }
 
@@ -287,10 +316,13 @@
                 const d = JSON.parse(e.target.result);
                 pos = d.pos; names = d.names; lastShomuIndex = d.lastShomuIndex;
                 saveAll(); location.reload();
-            } catch(err) { alert('ファイルの読み込みに失敗しました。'); }
+            } catch(err) { alert('読み込み失敗'); }
         };
         reader.readAsText(input.files[0]);
     }
+
+    function resetNames() { if(confirm('名前をクリアしますか？')) { names = {}; renderMaint(); saveAll(); } }
+    function fullReset() { if(confirm('全てリセットしますか？')) { localStorage.clear(); location.reload(); } }
 
     init();
 </script>
