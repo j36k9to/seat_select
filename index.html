@@ -17,7 +17,6 @@
             --color-text-sub: #4d4d4d;
             --color-bg-gray: #f2f2f2;
             --color-border-main: #212121;
-            --color-error-main: #d43d35;
             --color-focus-yellow: #ffdd00;
             --font-family: 'BIZ UDPGothic', sans-serif;
             --s-8: 8px; --s-16: 16px; --s-24: 24px; --s-32: 32px; --s-48: 48px;
@@ -36,7 +35,7 @@
 
         header {
             border-bottom: 4px solid var(--color-blue-600);
-            margin-bottom: var(--s-48);
+            margin-bottom: var(--s-32);
             padding-bottom: var(--s-8);
             display: flex; justify-content: space-between; align-items: center;
         }
@@ -64,8 +63,6 @@
             border-radius: 2px; width: 100%; box-sizing: border-box;
         }
 
-        input[type="text"]:focus { outline: 4px solid var(--color-focus-yellow); outline-offset: 0; }
-
         button {
             font-family: var(--font-family); font-weight: 700; font-size: 1rem;
             cursor: pointer; border-radius: 2px; border: 2px solid transparent;
@@ -77,15 +74,23 @@
 
         .btn-primary { background-color: var(--color-blue-600); color: #ffffff; }
         .btn-secondary { background-color: #ffffff; border-color: var(--color-border-main); color: var(--color-text-main); }
-        .btn-danger { background-color: #ffffff; border-color: var(--color-error-main); color: var(--color-error-main); }
+        .btn-danger { background-color: #ffffff; border-color: #d43d35; color: #d43d35; }
         .btn-count { min-height: 40px; min-width: 40px; padding: 0; margin-left: var(--s-8); font-size: 1.25rem; }
 
-        .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-48) 0; }
+        .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-32) 0; }
+
+        /* 抽選日時表示 */
+        .timestamp-area {
+            display: flex; justify-content: flex-end;
+            margin-bottom: var(--s-8);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--color-text-sub);
+        }
 
         .seat-area-wrapper {
             width: 100%; position: relative; padding-top: 56.25%;
             background: #ffffff; border: 4px solid var(--color-border-main);
-            /* グリッド背景を薄く表示して整列を補助 */
             background-image: radial-gradient(#ddd 1px, transparent 1px);
             background-size: 2.5% 2.5%;
             touch-action: none; user-select: none; box-sizing: border-box;
@@ -100,23 +105,9 @@
         }
 
         .seat-label { font-size: 0.75rem; color: var(--color-text-sub); pointer-events: none; margin-bottom: 4px; }
-        
-        /* 職員名を大きく表示 */
-        .seat-name { 
-            font-size: 1.25rem; /* 16pxから20px相当へ拡大 */
-            font-weight: 700; 
-            pointer-events: none; 
-            text-align: center;
-            line-height: 1.2;
-            width: 90%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+        .seat-name { font-size: 1.25rem; font-weight: 700; pointer-events: none; text-align: center; line-height: 1.2; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        @media (max-width: 600px) {
-            .seat-name { font-size: 1rem; } 
-        }
+        @media (max-width: 600px) { .seat-name { font-size: 1rem; } }
 
         #maintenanceArea { display: none; }
     </style>
@@ -132,16 +123,13 @@
     <div id="maintenanceArea">
         <section>
             <div id="roleInputs"></div>
-            <div class="role-group" style="margin-top: var(--s-32);">
-                <h2 style="font-size: 1.25rem; border-left: 4px solid var(--color-blue-600); padding-left: var(--s-8); margin-bottom: var(--s-16);">システム管理</h2>
-                <div style="display:flex; gap:var(--s-16); flex-wrap:wrap;">
-                    <button class="btn-secondary" onclick="exportConfig()">JSON出力</button>
-                    <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
-                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
-                    <button class="btn-primary" onclick="saveAll()">構成を保存</button>
-                    <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
-                    <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
-                </div>
+            <div style="display:flex; gap:var(--s-16); flex-wrap:wrap; margin-top: var(--s-32);">
+                <button class="btn-secondary" onclick="exportConfig()">JSON出力</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
+                <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
+                <button class="btn-primary" onclick="saveAll()">構成を保存</button>
+                <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
+                <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
             </div>
         </section>
     </div>
@@ -151,13 +139,15 @@
         <button id="undoBtn" class="btn-secondary" style="display:none;" onclick="undoResult()">抽選を戻す</button>
     </div>
 
-    <div class="seat-area-wrapper" id="seatAreaWrapper">
+    <div class="timestamp-area" id="drawTimestamp"></div>
+
+    <div class="seat-area-wrapper">
         <div id="seatArea" style="position:absolute; top:0; left:0; right:0; bottom:0;"></div>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v21_snapped';
+    const STORAGE_KEY = 'seat_system_v22_timestamp';
     let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
     let counts = { shomu: 2, general: 14 };
 
@@ -169,8 +159,7 @@
             lastShomuIndex = d.lastShomuIndex ?? 0;
             counts = d.counts || { shomu: 2, general: 14 };
         }
-        renderMaint();
-        syncSeats();
+        renderMaint(); syncSeats();
     }
 
     function toggleMaintenance() {
@@ -182,8 +171,7 @@
 
     function changeCount(role, delta) {
         counts[role] = Math.max(1, Math.min(30, counts[role] + delta));
-        renderMaint();
-        syncSeats();
+        renderMaint(); syncSeats();
     }
 
     function renderMaint() {
@@ -207,18 +195,12 @@
         const list = [{id:'shomu-special', label:'庶務専用'}];
         const totalGen = (counts.shomu - 1) + counts.general;
         for(let i=1; i<=totalGen; i++) list.push({id:`general-${i}`, label:`座席 ${i}`});
-
         list.forEach((d, i) => {
             const el = document.createElement('div');
             el.className = 'seat'; el.id = `box-${d.id}`;
             el.innerHTML = `<div class="seat-label">${d.label}</div><div class="seat-name" id="name-${d.id}">---</div>`;
-            
-            // 初回配置
-            const initX = (5 + (i % 5) * 18);
-            const initY = (5 + Math.floor(i / 5) * 18);
-            el.style.left = pos[d.id]?.left || initX + "%";
-            el.style.top = pos[d.id]?.top || initY + "%";
-            
+            el.style.left = pos[d.id]?.left || (5 + (i % 5) * 18) + "%";
+            el.style.top = pos[d.id]?.top || (5 + Math.floor(i / 5) * 18) + "%";
             makeDraggable(el, d.id);
             area.appendChild(el);
         });
@@ -236,23 +218,13 @@
             el.style.left = Math.max(0, Math.min(xP, 87)) + "%";
             el.style.top = Math.max(0, Math.min(yP, 87)) + "%";
         };
-
         const stop = () => {
-            if (!isDragging) return;
-            isDragging = false;
-            // 【吸着ロジック】 2.5%刻みのグリッドにスナップさせる
-            const snapValue = 2.5;
-            let currentLeft = parseFloat(el.style.left);
-            let currentTop = parseFloat(el.style.top);
-            
-            let snappedLeft = Math.round(currentLeft / snapValue) * snapValue;
-            let snappedTop = Math.round(currentTop / snapValue) * snapValue;
-            
-            el.style.left = snappedLeft + "%";
-            el.style.top = snappedTop + "%";
+            if (!isDragging) return; isDragging = false;
+            const snap = 2.5;
+            el.style.left = Math.round(parseFloat(el.style.left) / snap) * snap + "%";
+            el.style.top = Math.round(parseFloat(el.style.top) / snap) * snap + "%";
             pos[id] = { left: el.style.left, top: el.style.top };
         };
-
         el.onmousedown = el.ontouchstart = () => { isDragging = true; el.style.zIndex = 1000; };
         document.addEventListener('mousemove', move);
         document.addEventListener('touchmove', move, { passive: false });
@@ -260,10 +232,24 @@
         document.addEventListener('touchend', () => { el.style.zIndex = 10; stop(); });
     }
 
+    // 日時フォーマット関数: yyyy/mm/dd [h]:mm:ss
+    function getFormattedDate() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const h = now.getHours();
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        return `抽選日時：${y}/${m}/${d} ${h}:${min}:${s}`;
+    }
+
     function confirmAndDraw() {
         if(!confirm('座席の抽選を開始します。')) return;
         history = {};
         document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
+        
+        // 抽選実行
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
         const specIdx = lastShomuIndex % shomuNames.length;
@@ -273,11 +259,15 @@
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
         const combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
+
         document.getElementById('name-shomu-special').innerText = specName;
         combined.forEach((n, i) => {
             const e = document.getElementById(`name-general-${i+1}`);
             if(e) e.innerText = n;
         });
+
+        // 日時の更新
+        document.getElementById('drawTimestamp').innerText = getFormattedDate();
         document.getElementById('undoBtn').style.display = 'inline-flex';
     }
 
@@ -298,7 +288,12 @@
         };
         reader.readAsText(input.files[0]);
     }
-    function undoResult() { if(!history) return; for(let id in history) document.getElementById(id).innerText = history[id]; document.getElementById('undoBtn').style.display='none'; }
+    function undoResult() { 
+        if(!history) return; 
+        for(let id in history) document.getElementById(id).innerText = history[id]; 
+        document.getElementById('undoBtn').style.display='none';
+        document.getElementById('drawTimestamp').innerText = ''; // 戻した時は日時を消去
+    }
 
     init();
 </script>
