@@ -16,9 +16,10 @@
             --color-text-sub: #4d4d4d;
             --color-bg-gray: #f2f2f2;
             --color-border-main: #212121;
+            --color-error-main: #d43d35;
             --color-focus-yellow: #ffdd00;
             --font-family: 'BIZ UDPGothic', sans-serif;
-            --s-8: 8px; --s-16: 16px; --s-24: 24px; --s-32: 32px; --s-48: 48px;
+            --s-8: 8px; --s-16: 16px; --s-24: 24px; --s-32: 32px;
         }
 
         body {
@@ -48,6 +49,13 @@
             padding-left: var(--s-8);
         }
 
+        .role-header h2 { font-size: 1.25rem; margin: 0; }
+
+        .input-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--s-16); margin-bottom: var(--s-24);
+        }
+
         input[type="text"] {
             font-size: 1rem; padding: 8px 12px;
             border: 2px solid var(--color-border-main);
@@ -61,26 +69,25 @@
             min-height: 48px; padding: 8px 24px; box-sizing: border-box;
         }
 
+        button:focus { outline: 4px solid var(--color-focus-yellow); outline-offset: 0; }
+
         .btn-primary { background-color: var(--color-blue-600); color: #ffffff; }
         .btn-secondary { background-color: #ffffff; border-color: var(--color-border-main); color: var(--color-text-main); }
-        .btn-danger { background-color: #ffffff; border-color: #d43d35; color: #d43d35; }
+        .btn-danger { background-color: #ffffff; border-color: var(--color-error-main); color: var(--color-error-main); }
+        
+        /* 職員増減用の小型ボタン */
+        .btn-count { min-height: 40px; min-width: 40px; padding: 0; margin-left: var(--s-8); font-size: 1.25rem; }
 
         .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-32) 0; }
 
-        /* 抽選日時の表示エリア（外側の左上） */
         .timestamp-outer {
-            display: flex;
-            justify-content: flex-start; /* 左寄せ */
-            margin-bottom: var(--s-8);
-            min-height: 1.5rem;
+            display: flex; justify-content: flex-start;
+            margin-bottom: var(--s-8); min-height: 1.5rem;
         }
 
         #drawTimestamp {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--color-text-main);
-            border-left: 4px solid var(--color-border-main);
-            padding-left: var(--s-8);
+            font-size: 0.95rem; font-weight: 700; color: var(--color-text-main);
+            border-left: 4px solid var(--color-border-main); padding-left: var(--s-8);
         }
 
         .seat-area-wrapper {
@@ -116,13 +123,18 @@
     <div id="maintenanceArea">
         <section>
             <div id="roleInputs"></div>
-            <div style="display:flex; gap:var(--s-16); flex-wrap:wrap; margin-top: var(--s-32);">
-                <button class="btn-secondary" onclick="exportConfig()">JSON出力</button>
-                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
-                <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
-                <button class="btn-primary" onclick="saveAll()">構成を保存</button>
-                <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
-                <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
+
+            <div class="role-group" style="margin-top: var(--s-32);">
+                <h2 style="font-size: 1.25rem; border-left: 4px solid var(--color-blue-600); padding-left: var(--s-8); margin-bottom: var(--s-16);">システム管理</h2>
+                <div style="display:flex; gap:var(--s-16); flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="exportConfig()">JSON出力</button>
+                    <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
+                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
+                    <button class="btn-primary" onclick="saveAll()">構成を保存</button>
+                    
+                    <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
+                    <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
+                </div>
             </div>
         </section>
     </div>
@@ -142,7 +154,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v24_outer_ts';
+    const STORAGE_KEY = 'seat_system_v25_restored';
     let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
     let counts = { shomu: 2, general: 14 };
 
@@ -180,7 +192,17 @@
                 const id = `${role.k}-${i}`;
                 items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${names[id] || ''}" onchange="names['${id}']=this.value"></div>`;
             }
-            container.innerHTML += `<div class="role-group"><div class="role-header"><h2>${role.l}（${n}名）</h2><div><button class="btn-secondary btn-count" onclick="changeCount('${role.k}', 1)">＋</button><button class="btn-secondary btn-count" onclick="changeCount('${role.k}', -1)">－</button></div></div><div class="input-grid">${items}</div></div>`;
+            container.innerHTML += `
+                <div class="role-group" style="margin-bottom: var(--s-24);">
+                    <div class="role-header">
+                        <h2>${role.l}（${n}名）</h2>
+                        <div>
+                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', 1)">＋</button>
+                            <button class="btn-secondary btn-count" onclick="changeCount('${role.k}', -1)">－</button>
+                        </div>
+                    </div>
+                    <div class="input-grid">${items}</div>
+                </div>`;
         });
     }
 
@@ -227,22 +249,10 @@
         document.addEventListener('touchend', () => { el.style.zIndex = 10; stop(); });
     }
 
-    function getFormattedDate() {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const h = now.getHours();
-        const min = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        return `抽選日時：${y}/${m}/${d} ${h}:${min}:${s}`;
-    }
-
     function confirmAndDraw() {
         if(!confirm('座席の抽選を開始します。')) return;
         history = {};
         document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
-        
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
         const specIdx = lastShomuIndex % shomuNames.length;
@@ -252,14 +262,13 @@
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
         const combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
-
         document.getElementById('name-shomu-special').innerText = specName;
         combined.forEach((n, i) => {
             const e = document.getElementById(`name-general-${i+1}`);
             if(e) e.innerText = n;
         });
-
-        document.getElementById('drawTimestamp').innerText = getFormattedDate();
+        const now = new Date();
+        document.getElementById('drawTimestamp').innerText = `抽選日時：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         document.getElementById('undoBtn').style.display = 'inline-flex';
     }
 
@@ -280,13 +289,7 @@
         };
         reader.readAsText(input.files[0]);
     }
-    function undoResult() { 
-        if(!history) return; 
-        for(let id in history) document.getElementById(id).innerText = history[id]; 
-        document.getElementById('undoBtn').style.display='none';
-        document.getElementById('drawTimestamp').innerText = ''; 
-    }
-
+    function undoResult() { if(!history) return; for(let id in history) document.getElementById(id).innerText = history[id]; document.getElementById('undoBtn').style.display='none'; }
     init();
 </script>
 </body>
