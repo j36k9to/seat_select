@@ -75,25 +75,31 @@
         .btn-primary { background-color: var(--color-blue-600); color: #ffffff; }
         .btn-secondary { background-color: #ffffff; border-color: var(--color-border-main); color: var(--color-text-main); }
         .btn-danger { background-color: #ffffff; border-color: #d43d35; color: #d43d35; }
-        .btn-count { min-height: 40px; min-width: 40px; padding: 0; margin-left: var(--s-8); font-size: 1.25rem; }
 
         .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-32) 0; }
 
-        /* 抽選日時表示 */
-        .timestamp-area {
-            display: flex; justify-content: flex-end;
-            margin-bottom: var(--s-8);
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--color-text-sub);
-        }
-
+        /* レイアウトエリア */
         .seat-area-wrapper {
             width: 100%; position: relative; padding-top: 56.25%;
             background: #ffffff; border: 4px solid var(--color-border-main);
             background-image: radial-gradient(#ddd 1px, transparent 1px);
             background-size: 2.5% 2.5%;
             touch-action: none; user-select: none; box-sizing: border-box;
+        }
+
+        /* エリア内右上の日時表示 */
+        .timestamp-overlay {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--color-text-sub);
+            z-index: 1; /* 座席より下に配置 */
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 4px 8px;
+            border-radius: 2px;
+            pointer-events: none; /* ドラッグ操作の邪魔をしない */
         }
 
         .seat {
@@ -107,7 +113,10 @@
         .seat-label { font-size: 0.75rem; color: var(--color-text-sub); pointer-events: none; margin-bottom: 4px; }
         .seat-name { font-size: 1.25rem; font-weight: 700; pointer-events: none; text-align: center; line-height: 1.2; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        @media (max-width: 600px) { .seat-name { font-size: 1rem; } }
+        @media (max-width: 600px) { 
+            .seat-name { font-size: 1rem; }
+            .timestamp-overlay { font-size: 0.7rem; top: 8px; right: 8px; }
+        }
 
         #maintenanceArea { display: none; }
     </style>
@@ -139,15 +148,14 @@
         <button id="undoBtn" class="btn-secondary" style="display:none;" onclick="undoResult()">抽選を戻す</button>
     </div>
 
-    <div class="timestamp-area" id="drawTimestamp"></div>
-
-    <div class="seat-area-wrapper">
+    <div class="seat-area-wrapper" id="captureArea">
+        <div id="drawTimestamp" class="timestamp-overlay"></div>
         <div id="seatArea" style="position:absolute; top:0; left:0; right:0; bottom:0;"></div>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v22_timestamp';
+    const STORAGE_KEY = 'seat_system_v23_overlay';
     let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
     let counts = { shomu: 2, general: 14 };
 
@@ -232,7 +240,6 @@
         document.addEventListener('touchend', () => { el.style.zIndex = 10; stop(); });
     }
 
-    // 日時フォーマット関数: yyyy/mm/dd [h]:mm:ss
     function getFormattedDate() {
         const now = new Date();
         const y = now.getFullYear();
@@ -249,7 +256,6 @@
         history = {};
         document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
         
-        // 抽選実行
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
         const specIdx = lastShomuIndex % shomuNames.length;
@@ -266,7 +272,7 @@
             if(e) e.innerText = n;
         });
 
-        // 日時の更新
+        // レイアウトエリア内の日時を更新
         document.getElementById('drawTimestamp').innerText = getFormattedDate();
         document.getElementById('undoBtn').style.display = 'inline-flex';
     }
@@ -292,7 +298,7 @@
         if(!history) return; 
         for(let id in history) document.getElementById(id).innerText = history[id]; 
         document.getElementById('undoBtn').style.display='none';
-        document.getElementById('drawTimestamp').innerText = ''; // 戻した時は日時を消去
+        document.getElementById('drawTimestamp').innerText = ''; 
     }
 
     init();
