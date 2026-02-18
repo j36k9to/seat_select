@@ -75,7 +75,6 @@
         .btn-secondary { background-color: #ffffff; border-color: var(--color-border-main); color: var(--color-text-main); }
         .btn-danger { background-color: #ffffff; border-color: var(--color-error-main); color: var(--color-error-main); }
         
-        /* 職員増減用の小型ボタン */
         .btn-count { min-height: 40px; min-width: 40px; padding: 0; margin-left: var(--s-8); font-size: 1.25rem; }
 
         .controls-main { display: flex; justify-content: center; gap: var(--s-16); margin: var(--s-32) 0; }
@@ -131,7 +130,6 @@
                     <input type="file" id="importFile" style="display:none" onchange="importConfig(this)">
                     <button class="btn-secondary" onclick="document.getElementById('importFile').click()">JSON読込</button>
                     <button class="btn-primary" onclick="saveAll()">構成を保存</button>
-                    
                     <button class="btn-danger" onclick="resetNames()">職員名をリセット</button>
                     <button class="btn-danger" onclick="resetLayout()">レイアウトをリセット</button>
                 </div>
@@ -154,7 +152,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'seat_system_v25_restored';
+    const STORAGE_KEY = 'seat_system_v26_zero_shomu';
     let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
     let counts = { shomu: 2, general: 14 };
 
@@ -177,7 +175,9 @@
     }
 
     function changeCount(role, delta) {
-        counts[role] = Math.max(1, Math.min(30, counts[role] + delta));
+        // 庶務(shomu)は0名まで、一般(general)は1名まで下げられるように設定
+        const minVal = (role === 'shomu') ? 0 : 1;
+        counts[role] = Math.max(minVal, Math.min(30, counts[role] + delta));
         renderMaint(); syncSeats();
     }
 
@@ -187,7 +187,7 @@
         const roles = [{k:'shomu', l:'庶務担当'}, {k:'general', l:'一般職員'}];
         roles.forEach(role => {
             const n = counts[role.k];
-            let items = '';
+            let items = n === 0 ? '<p style="color:var(--color-text-sub); margin-left:var(--s-8);">登録なし</p>' : '';
             for(let i=1; i<=n; i++) {
                 const id = `${role.k}-${i}`;
                 items += `<div class="input-item"><input type="text" placeholder="${role.l}${i}" value="${names[id] || ''}" onchange="names['${id}']=this.value"></div>`;
@@ -209,9 +209,21 @@
     function syncSeats() {
         const area = document.getElementById('seatArea');
         area.innerHTML = '';
-        const list = [{id:'shomu-special', label:'庶務専用'}];
-        const totalGen = (counts.shomu - 1) + counts.general;
-        for(let i=1; i<=totalGen; i++) list.push({id:`general-${i}`, label:`座席 ${i}`});
+        const list = [];
+        
+        // 庶務担当が1名以上いる場合のみ「庶務専用席」を作成
+        if (counts.shomu > 0) {
+            list.push({id:'shomu-special', label:'庶務専用'});
+        }
+
+        // 一般席の数を計算（庶務の2人目以降 ＋ 一般職員の数）
+        const otherShomuCount = Math.max(0, counts.shomu - 1);
+        const totalGenSeats = otherShomuCount + counts.general;
+        
+        for(let i=1; i<=totalGenSeats; i++) {
+            list.push({id:`general-${i}`, label:`座席 ${i}`});
+        }
+
         list.forEach((d, i) => {
             const el = document.createElement('div');
             el.className = 'seat'; el.id = `box-${d.id}`;
@@ -227,7 +239,6 @@
         let isDragging = false;
         const move = (e) => {
             if (!isDragging) return;
-            if (e.cancelable) e.preventDefault();
             const rect = document.getElementById('seatArea').getBoundingClientRect();
             const c = e.type.includes('touch') ? e.touches[0] : e;
             let xP = ((c.clientX - rect.left) / rect.width) * 100 - 6.5;
@@ -253,20 +264,36 @@
         if(!confirm('座席の抽選を開始します。')) return;
         history = {};
         document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
+        
+        // 名簿の作成
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
-        const specIdx = lastShomuIndex % shomuNames.length;
-        const specName = shomuNames[specIdx];
-        lastShomuIndex = (specIdx + 1);
-        const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
+        
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
-        const combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
-        document.getElementById('name-shomu-special').innerText = specName;
-        combined.forEach((n, i) => {
-            const e = document.getElementById(`name-general-${i+1}`);
-            if(e) e.innerText = n;
-        });
+
+        if (counts.shomu > 0) {
+            // 庶務がいる場合：一人は専用席、残りは一般席へ
+            const specIdx = lastShomuIndex % shomuNames.length;
+            const specName = shomuNames[specIdx];
+            lastShomuIndex = (specIdx + 1);
+            const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
+            const combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
+
+            document.getElementById('name-shomu-special').innerText = specName;
+            combined.forEach((n, i) => {
+                const e = document.getElementById(`name-general-${i+1}`);
+                if(e) e.innerText = n;
+            });
+        } else {
+            // 庶務がいない場合：全員を一般席へ
+            const combined = [...generalNames].sort(() => Math.random() - 0.5);
+            combined.forEach((n, i) => {
+                const e = document.getElementById(`name-general-${i+1}`);
+                if(e) e.innerText = n;
+            });
+        }
+
         const now = new Date();
         document.getElementById('drawTimestamp').innerText = `抽選日時：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         document.getElementById('undoBtn').style.display = 'inline-flex';
