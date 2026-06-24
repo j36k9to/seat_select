@@ -1,3 +1,10 @@
+提示されたコードをベースに、ご指定の2つの機能（**進む・戻るの履歴管理**、および**一般職員1番目の配置制限**）を組み込みました。
+
+一般職員の最初に記載された職員（`general-1`）が抽選時に**座席1、2、3、4、5以外の場所に割り当てられない**よう、抽選ロジックを最適化しています（警告アラートなしで自動的に制限が適用されます）。
+
+### 修正版フルコード
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -140,6 +147,7 @@
     <div class="controls-main">
         <button class="btn-primary" style="font-size: 1.5rem; padding: 24px 60px;" onclick="confirmAndDraw()">座席を抽選する</button>
         <button id="undoBtn" class="btn-secondary" style="display:none;" onclick="undoResult()">抽選を戻す</button>
+        <button id="redoBtn" class="btn-secondary" style="display:none;" onclick="redoResult()">抽選を進める</button>
     </div>
 
     <div class="timestamp-outer">
@@ -153,8 +161,12 @@
 
 <script>
     const STORAGE_KEY = 'seat_system_v26_zero_shomu';
-    let names = {}; let pos = {}; let lastShomuIndex = 0; let history = null;
+    let names = {}; let pos = {}; let lastShomuIndex = 0;
     let counts = { shomu: 2, general: 14 };
+    
+    // 戻す・進む用のスタック履歴
+    let historyUndoStack = [];
+    let historyRedoStack = [];
 
     function init() {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -175,7 +187,6 @@
     }
 
     function changeCount(role, delta) {
-        // 庶務(shomu)は0名まで、一般(general)は1名まで下げられるように設定
         const minVal = (role === 'shomu') ? 0 : 1;
         counts[role] = Math.max(minVal, Math.min(30, counts[role] + delta));
         renderMaint(); syncSeats();
@@ -211,12 +222,10 @@
         area.innerHTML = '';
         const list = [];
         
-        // 庶務担当が1名以上いる場合のみ「庶務専用席」を作成
         if (counts.shomu > 0) {
             list.push({id:'shomu-special', label:'庶務専用'});
         }
 
-        // 一般席の数を計算（庶務の2人目以降 ＋ 一般職員の数）
         const otherShomuCount = Math.max(0, counts.shomu - 1);
         const totalGenSeats = otherShomuCount + counts.general;
         
@@ -260,25 +269,57 @@
         document.addEventListener('touchend', () => { el.style.zIndex = 10; stop(); });
     }
 
+    // 現在の盤面の状態をスナップショットとして取得
+    function getDisplaySnapshot() {
+        const snapshot = {};
+        document.querySelectorAll('.seat-name').forEach(e => {
+            snapshot[e.id] = e.innerText;
+        });
+        return snapshot;
+    }
+
+    // スナップショットを盤面に復元
+    function restoreDisplaySnapshot(snapshot) {
+        for (let id in snapshot) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = snapshot[id];
+        }
+    }
+
     function confirmAndDraw() {
         if(!confirm('座席の抽選を開始します。')) return;
-        history = {};
-        document.querySelectorAll('.seat-name').forEach(e => history[e.id] = e.innerText);
+
+        // 新しい抽選を行うため、戻す用のスタックに現在の状態を入れ、進むスタックをクリア
+        historyUndoStack.push(getDisplaySnapshot());
+        historyRedoStack = [];
         
-        // 名簿の作成
         const shomuNames = [];
         for(let i=1; i<=counts.shomu; i++) shomuNames.push(names[`shomu-${i}`] || `庶務${i}`);
         
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
 
+        // 一般職員の一番最初に記載した職員名
+        const firstGeneralStaff = generalNames[0];
+
         if (counts.shomu > 0) {
-            // 庶務がいる場合：一人は専用席、残りは一般席へ
             const specIdx = lastShomuIndex % shomuNames.length;
             const specName = shomuNames[specIdx];
             lastShomuIndex = (specIdx + 1);
             const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
-            const combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
+            
+            // 抽選処理 (一般職員1が座席1~5に入るようにループ制御)
+            let combined = [];
+            let isValid = false;
+            
+            while (!isValid) {
+                combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
+                // combinedのインデックス 0~4 が座席1~5に対応
+                const firstGeneralIdx = combined.indexOf(firstGeneralStaff);
+                if (firstGeneralIdx >= 0 && firstGeneralIdx <= 4) {
+                    isValid = true;
+                }
+            }
 
             document.getElementById('name-shomu-special').innerText = specName;
             combined.forEach((n, i) => {
@@ -286,8 +327,17 @@
                 if(e) e.innerText = n;
             });
         } else {
-            // 庶務がいない場合：全員を一般席へ
-            const combined = [...generalNames].sort(() => Math.random() - 0.5);
+            let combined = [];
+            let isValid = false;
+            
+            while (!isValid) {
+                combined = [...generalNames].sort(() => Math.random() - 0.5);
+                const firstGeneralIdx = combined.indexOf(firstGeneralStaff);
+                if (firstGeneralIdx >= 0 && firstGeneralIdx <= 4) {
+                    isValid = true;
+                }
+            }
+
             combined.forEach((n, i) => {
                 const e = document.getElementById(`name-general-${i+1}`);
                 if(e) e.innerText = n;
@@ -296,17 +346,54 @@
 
         const now = new Date();
         document.getElementById('drawTimestamp').innerText = `抽選日時：${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-        document.getElementById('undoBtn').style.display = 'inline-flex';
+        
+        updateHistoryButtons();
+    }
+
+    // 抽選を戻す (Undo)
+    function undoResult() {
+        if (historyUndoStack.length === 0) return;
+        
+        // 進むスタックに戻す前の今の盤面を退避
+        historyRedoStack.push(getDisplaySnapshot());
+        
+        // 1つ前の状態を取り出して復元
+        const previousState = historyUndoStack.pop();
+        restoreDisplaySnapshot(previousState);
+        
+        updateHistoryButtons();
+    }
+
+    // 抽選を進める (Redo)
+    function redoResult() {
+        if (historyRedoStack.length === 0) return;
+        
+        // 戻すスタックに進む前の今の盤面を退避
+        historyUndoStack.push(getDisplaySnapshot());
+        
+        // 進んだ後の状態を取り出して復元
+        const nextState = historyRedoStack.pop();
+        restoreDisplaySnapshot(nextState);
+        
+        updateHistoryButtons();
+    }
+
+    // ボタンの表示/非表示をスタック状況に応じて同期
+    function updateHistoryButtons() {
+        document.getElementById('undoBtn').style.display = historyUndoStack.length > 0 ? 'inline-flex' : 'none';
+        document.getElementById('redoBtn').style.display = historyRedoStack.length > 0 ? 'inline-flex' : 'none';
     }
 
     function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify({pos, names, lastShomuIndex, counts})); alert("保存しました。"); }
     function resetNames() { if(confirm('職員名をリセットしますか？')) { names = {}; renderMaint(); saveAll(); } }
     function resetLayout() { if(confirm('レイアウトを初期化しますか？')) { pos = {}; syncSeats(); saveAll(); } }
+    
     function exportConfig() {
         const blob = new Blob([JSON.stringify({pos, names, lastShomuIndex, counts})], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = "seat_config.json"; a.click();
     }
+    
     function importConfig(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -316,8 +403,10 @@
         };
         reader.readAsText(input.files[0]);
     }
-    function undoResult() { if(!history) return; for(let id in history) document.getElementById(id).innerText = history[id]; document.getElementById('undoBtn').style.display='none'; }
+    
     init();
 </script>
 </body>
 </html>
+
+```
