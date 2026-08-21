@@ -291,8 +291,12 @@
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
 
-        // 制限対象者（一般職員1, 2, 3 のうち存在するもの）を抽出
+        // 制限対象（一般1, 2, 3）とそれ以外のメンバーを分離
         const restrictedStaffs = generalNames.slice(0, Math.min(3, counts.general));
+        const otherGeneralNames = generalNames.slice(Math.min(3, counts.general));
+
+        // 制限用席のインデックス (座席1, 座席2, 座席4 => インデックス 0, 1, 3)
+        const allowedIndices = [0, 1, 3];
 
         let combined = [];
         let isValid = false;
@@ -303,12 +307,12 @@
             lastShomuIndex = (specIdx + 1);
             const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
             
-            // 抽選処理 (制限対象全員のインデックスが 0~4（座席1~5）に収まるまで判定)
+            // 全対象者をシャッフルし、一般1〜3が指定席（インデックス0, 1, 3）内に納まるまで試行
             while (!isValid) {
-                combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
+                combined = [...otherShomu, ...otherGeneralNames, ...restrictedStaffs].sort(() => Math.random() - 0.5);
                 isValid = restrictedStaffs.every(staff => {
                     const idx = combined.indexOf(staff);
-                    return idx >= 0 && idx <= 4;
+                    return allowedIndices.includes(idx);
                 });
             }
 
@@ -319,10 +323,10 @@
             });
         } else {
             while (!isValid) {
-                combined = [...generalNames].sort(() => Math.random() - 0.5);
+                combined = [...otherGeneralNames, ...restrictedStaffs].sort(() => Math.random() - 0.5);
                 isValid = restrictedStaffs.every(staff => {
                     const idx = combined.indexOf(staff);
-                    return idx >= 0 && idx <= 4;
+                    return allowedIndices.includes(idx);
                 });
             }
 
