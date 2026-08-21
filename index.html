@@ -1,3 +1,10 @@
+提示されたコードに対し、**一般職員1・2・3の最大3名**が同時に「座席1,2,3,4,5」の枠内に収まるように抽選アルゴリズムをアップデートしました。
+
+設定画面で入力されている一般職員の人数に応じて、存在する対象者（一般1のみ、一般1〜2、一般1〜3）が自動で抽出され、確実に座席1〜5にのみ配置されます。
+
+### 修正版フルコード
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -282,7 +289,6 @@
     function confirmAndDraw() {
         if(!confirm('座席の抽選を開始します。')) return;
 
-        // 新しい抽選を行うため、戻す用のスタックに現在の状態を入れ、進むスタックをクリア
         historyUndoStack.push(getDisplaySnapshot());
         historyRedoStack = [];
         
@@ -292,8 +298,11 @@
         const generalNames = [];
         for(let i=1; i<=counts.general; i++) generalNames.push(names[`general-${i}`] || `一般${i}`);
 
-        // 一般職員の一番最初に記載した職員名
-        const firstGeneralStaff = generalNames[0];
+        // 制限対象者（一般職員1, 2, 3 のうち存在するもの）を抽出
+        const restrictedStaffs = generalNames.slice(0, Math.min(3, counts.general));
+
+        let combined = [];
+        let isValid = false;
 
         if (counts.shomu > 0) {
             const specIdx = lastShomuIndex % shomuNames.length;
@@ -301,17 +310,13 @@
             lastShomuIndex = (specIdx + 1);
             const otherShomu = shomuNames.filter((_, i) => i !== specIdx);
             
-            // 抽選処理 (一般職員1が座席1~5に入るようにループ制御)
-            let combined = [];
-            let isValid = false;
-            
+            // 抽選処理 (制限対象全員のインデックスが 0~4（座席1~5）に収まるまで判定)
             while (!isValid) {
                 combined = [...otherShomu, ...generalNames].sort(() => Math.random() - 0.5);
-                // combinedのインデックス 0~4 が座席1~5に対応
-                const firstGeneralIdx = combined.indexOf(firstGeneralStaff);
-                if (firstGeneralIdx >= 0 && firstGeneralIdx <= 4) {
-                    isValid = true;
-                }
+                isValid = restrictedStaffs.every(staff => {
+                    const idx = combined.indexOf(staff);
+                    return idx >= 0 && idx <= 4;
+                });
             }
 
             document.getElementById('name-shomu-special').innerText = specName;
@@ -320,15 +325,12 @@
                 if(e) e.innerText = n;
             });
         } else {
-            let combined = [];
-            let isValid = false;
-            
             while (!isValid) {
                 combined = [...generalNames].sort(() => Math.random() - 0.5);
-                const firstGeneralIdx = combined.indexOf(firstGeneralStaff);
-                if (firstGeneralIdx >= 0 && firstGeneralIdx <= 4) {
-                    isValid = true;
-                }
+                isValid = restrictedStaffs.every(staff => {
+                    const idx = combined.indexOf(staff);
+                    return idx >= 0 && idx <= 4;
+                });
             }
 
             combined.forEach((n, i) => {
@@ -343,35 +345,22 @@
         updateHistoryButtons();
     }
 
-    // 抽選を戻す (Undo)
     function undoResult() {
         if (historyUndoStack.length === 0) return;
-        
-        // 進むスタックに戻す前の今の盤面を退避
         historyRedoStack.push(getDisplaySnapshot());
-        
-        // 1つ前の状態を取り出して復元
         const previousState = historyUndoStack.pop();
         restoreDisplaySnapshot(previousState);
-        
         updateHistoryButtons();
     }
 
-    // 抽選を進める (Redo)
     function redoResult() {
         if (historyRedoStack.length === 0) return;
-        
-        // 戻すスタックに進む前の今の盤面を退避
         historyUndoStack.push(getDisplaySnapshot());
-        
-        // 進んだ後の状態を取り出して復元
         const nextState = historyRedoStack.pop();
         restoreDisplaySnapshot(nextState);
-        
         updateHistoryButtons();
     }
 
-    // ボタンの表示/非表示をスタック状況に応じて同期
     function updateHistoryButtons() {
         document.getElementById('undoBtn').style.display = historyUndoStack.length > 0 ? 'inline-flex' : 'none';
         document.getElementById('redoBtn').style.display = historyRedoStack.length > 0 ? 'inline-flex' : 'none';
